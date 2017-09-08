@@ -1,0 +1,17 @@
+{
+  "name": "lvl99/acf-page-builder",
+  "description": "Define and build custom post/page layouts for your ACF-powered WordPress website",
+  "homepage"   : "https://github.com/lvl99/acf-page-builder",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0+",
+  "authors": [
+    {
+      "name": "Matt Scheurich",
+      "email": "matt@lvl99.com"
+    }
+  ],
+  "require": {
+    "php": ">= 7.0",
+    "advanced-custom-fields/advanced-custom-fields-pro": "5.6.1"
+  }
+}

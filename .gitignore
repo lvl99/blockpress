@@ -1,0 +1,6 @@
+!.gitignore
+.idea
+.DS_Store
+Thumbs.db
+Icon?
+/vendor/
