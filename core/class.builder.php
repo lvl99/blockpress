@@ -252,13 +252,13 @@ class Builder extends Entity {
     // Default to all blocks if none specified
     if ( empty( $block_names ) )
     {
-      $block_names = array_keys( acf_page_builder()->get_blocks() );
+      $block_names = array_keys( lvl99_acf_page_builder()->get_blocks() );
     }
 
     // Get each named block instance
     foreach ( $block_names as $block_name )
     {
-      $_blocks[ $block_name ] = acf_page_builder()->get_block_instance( $block_name );
+      $_blocks[ $block_name ] = lvl99_acf_page_builder()->get_block_instance( $block_name );
     }
 
     return $_blocks;

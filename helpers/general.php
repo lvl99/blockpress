@@ -71,7 +71,7 @@ function load_blocks_into_acf_field ( $type, $acf_config, $options = [] )
 
           // Fetch the global block instances
         } else {
-          $_layout_blocks[] = acf_page_builder()->get_block_instance( $block_name )->generate_acf( $_layout_block_key );
+          $_layout_blocks[] = lvl99_acf_page_builder()->get_block_instance( $block_name )->generate_acf( $_layout_block_key );
         }
       }
 

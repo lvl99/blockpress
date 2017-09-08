@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: ACF Page Builder
+Plugin Name: LVL99 ACF Page Builder
 Plugin URI: https://github.com/lvl99/acf-page-builder
 Description: Define and build custom post/page layouts for your ACF-powered WordPress website
 Author: Matt Scheurich
@@ -24,16 +24,14 @@ Version: 0.1.0
  *
  */
 
-use LVL99\ACFPageBuilder as ACFPageBuilder;
-
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
 }
 
-if ( ! function_exists( 'acf_page_builder' ) && ! class_exists( 'LVL99\\ACFPageBuilder\\Builder' ) )
+if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\ACFPageBuilder\\Builder' ) )
 {
-  define( 'ACF_PAGE_BUILDER', '0.1.0' );
-  define( 'ACF_PAGE_BUILDER_PATH', __DIR__ );
+  define( 'LVL99_ACF_PAGE_BUILDER', '0.1.0' );
+  define( 'LVL99_ACF_PAGE_BUILDER_PATH', __DIR__ );
 
   require_once( __DIR__ . '/helpers/general.php' );
   require_once( __DIR__ . '/helpers/acf-api.php' );
@@ -52,28 +50,28 @@ if ( ! function_exists( 'acf_page_builder' ) && ! class_exists( 'LVL99\\ACFPageB
    * @param array $_load_blocks
    * @returns array
    */
-  function acf_page_builder_load_blocks ( $_load_blocks )
+  function lvl99_acf_page_builder_load_blocks ( $_load_blocks )
   {
     $_load_blocks = array_merge( $_load_blocks, [
 //      'content' => [
-//        'class' => PageBuilder\get_namespace_class( 'BlockContent' ),
+//        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockContent' ),
 //        'path' => ACF_PAGE_BUILDER_PATH . '/blocks/class.block.content.php',
 //      ],
       'columns' => [
-        'class' => ACFPageBuilder\get_namespace_class( 'BlockColumns' ),
-        'path' => ACF_PAGE_BUILDER_PATH . '/blocks/class.block.columns.php',
+        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockColumns' ),
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.columns.php',
       ],
       'text' => [
-        'class' => ACFPageBuilder\get_namespace_class( 'BlockText' ),
-        'path' => ACF_PAGE_BUILDER_PATH . '/blocks/class.block.text.php',
+        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockText' ),
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.text.php',
       ],
       'image' => [
-        'class' => ACFPageBuilder\get_namespace_class( 'BlockImage' ),
-        'path' => ACF_PAGE_BUILDER_PATH . '/blocks/class.block.image.php',
+        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockImage' ),
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.image.php',
       ],
       'carousel' => [
-        'class' => ACFPageBuilder\get_namespace_class( 'BlockCarousel' ),
-        'path' => ACF_PAGE_BUILDER_PATH . '/blocks/class.block.carousel.php',
+        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockCarousel' ),
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.carousel.php',
       ],
     ] );
 
@@ -87,33 +85,33 @@ if ( ! function_exists( 'acf_page_builder' ) && ! class_exists( 'LVL99\\ACFPageB
    * @param array $_load_layouts
    * @returns array
    */
-  function acf_page_builder_load_layouts ( $_load_layouts )
+  function lvl99_acf_page_builder_load_layouts ( $_load_layouts )
   {
     $_load_layouts = array_merge( $_load_layouts, [
       'page' => [
-        'class' => ACFPageBuilder\get_namespace_class( 'LayoutPage' ),
-        'path' => ACF_PAGE_BUILDER_PATH . '/layouts/class.layout.page.php',
+        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'LayoutPage' ),
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/layouts/class.layout.page.php',
       ],
     ] );
 
     return $_load_layouts;
   }
 
-  function acf_page_builder()
+  function lvl99_acf_page_builder()
   {
-    global $acf_page_builder;
+    global $lvl99_acf_page_builder;
 
-    if ( ! isset( $acf_page_builder ) )
+    if ( ! isset( $lvl99_acf_page_builder ) )
     {
-      $acf_page_builder = new ACFPageBuilder\Builder();
-      $acf_page_builder->initialise();
+      $lvl99_acf_page_builder = new LVL99\ACFPageBuilder\Builder();
+      $lvl99_acf_page_builder->initialise();
     }
 
-    return $acf_page_builder;
+    return $lvl99_acf_page_builder;
   }
 
   // Let's make page layout magic!
-  add_action( 'LVL99\ACFPageBuilder\Builder\load_blocks', 'acf_page_builder_load_blocks', 10, 1 );
-  add_action( 'LVL99\ACFPageBuilder\Builder\load_layouts', 'acf_page_builder_load_layouts', 10, 1 );
-  add_action( 'acf/init', 'acf_page_builder' );
+  add_action( 'LVL99\ACFPageBuilder\Builder\load_blocks', 'lvl99_acf_page_builder_load_blocks', 10, 1 );
+  add_action( 'LVL99\ACFPageBuilder\Builder\load_layouts', 'lvl99_acf_page_builder_load_layouts', 10, 1 );
+  add_action( 'acf/init', 'lvl99_acf_page_builder' );
 }

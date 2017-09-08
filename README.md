@@ -1,17 +1,17 @@
-# ACF Page Builder
+# LVL99 ACF Page Builder
 
 v0.1.0
 
 By Matt Scheurich <matt@lvl99.com>
 
-This is currently a proof of concept using ACF PRO and its flexible content field as a way to layout a page's content
-beyond using the basic text editor.
+This is currently a proof of concept using [ACF PRO](http://www.advancedcustomfields.com) and its flexible content field
+as a way to layout a page's content beyond using the basic text editor.
 
 The main key features is that it should:
-  - Uses ACF PRO as is with no modification or 
-  - Provides an extensible blueprint for creating rich page layouts
-  - Doesn't enforce any opinionated or poorly-crafted CSS -- theme developers will have an agnostic and general
-    representation of the content to do what they will with the presentation side of things.
+  1. Uses ACF PRO as is with no modifications or custom extensions; 
+  2. Provides an extensible blueprint for creating rich page layouts;
+  3. Does not enforce any opinionated or poorly-crafted CSS -- theme developers will have an agnostic and general
+     representation of the content to do what they will with the presentation side of things.
 
 I've extensively tried out Visual Composer, Divi Builder, and Gutenberg:
   - Visual Composer is OK, but the shortcode method is clumsy and unreadable. It has bonuses for extensibility, but its
@@ -35,6 +35,10 @@ things like RSS feeds would show the regular `post_content` when displaying a po
 in the context of the rendered page that it would generate the richer page content and layout. If you think about it,
 the `post_content` is like the "plain-text" version of the post's content, kind of like when you do an email campaign
 and have a plain-text version.
+
+> ***IMPORTANT:***
+>
+> As this is still in the prototyping stage its API will most definitely undergo heavy changes.
 
 
 ## Roadmap
@@ -61,4 +65,4 @@ and have a plain-text version.
 
 ### License
 
-GPL 2.0+
+[GPL 2.0+](LICENSE.md)

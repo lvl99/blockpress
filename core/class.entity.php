@@ -153,7 +153,7 @@ class Entity {
    */
   public function register_block ( $block_name )
   {
-    $this->_blocks[ $block_name ] = acf_page_builder()->get_block_instance( $block_name );
+    $this->_blocks[ $block_name ] = lvl99_acf_page_builder()->get_block_instance( $block_name );
   }
 
   /**
@@ -201,7 +201,7 @@ class Entity {
     // If again no blocks specified, register all of the blocks
     if ( empty( $blocks ) )
     {
-      $blocks = array_keys( acf_page_builder()->get_prop( 'loaded_blocks' ) );
+      $blocks = array_keys( lvl99_acf_page_builder()->get_prop( 'loaded_blocks' ) );
       $this->blocks = $blocks;
     }
 
@@ -223,7 +223,7 @@ class Entity {
    */
   public function register_layout ( $layout_name )
   {
-    $this->_layouts[ $layout_name ] = acf_page_builder()->get_layout_instance( $layout_name );
+    $this->_layouts[ $layout_name ] = lvl99_acf_page_builder()->get_layout_instance( $layout_name );
   }
 
   /**
@@ -264,7 +264,7 @@ class Entity {
     // If no layouts given, register all of the layouts
     if ( empty( $layouts ) )
     {
-      $layouts = array_keys( acf_page_builder()->get_prop( 'loaded_layouts' ) );
+      $layouts = array_keys( lvl99_acf_page_builder()->get_prop( 'loaded_layouts' ) );
       $this->layouts = $layouts;
     }
 
