@@ -15,7 +15,7 @@ class Builder extends Entity {
    *
    * @var string
    */
-  public $VERSION = ACF_PAGE_BUILDER;
+  public $VERSION = LVL99_ACF_PAGE_BUILDER;
 
   /**
    * @var string

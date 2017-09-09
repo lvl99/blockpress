@@ -22,9 +22,9 @@ I've extensively tried out Visual Composer, Divi Builder, and Gutenberg:
   - Gutenberg is half-baked and even worse they're baking in bad architecture. The HTML comment demarcation is not an
     elegant solution, however the editor UX and IA is mostly nice.
 
-The funny thing is that the customisation that ACF provides with all its supported fields, and especially the flexible
-content field, can be worked into a workable layout system which could have some interesting applications in both the
-backend and frontend.
+The funny thing is that the customisation that ACF provides with all its supported fields (and ecosystem), and
+especially the flexible content field, can be worked into a workable layout system which could have some interesting
+applications in both the backend and frontend.
  
 While ACF provides a rudimentary backend solution to render the fields for entering and managing data, it could easily
 be expanded upon its strong foundation of post meta data to potentially fuel an integrated client-side editor on the
@@ -57,10 +57,10 @@ and have a plain-text version.
 
 ### v0.3.0
   - [ ] Create/research REST JSON API to fuel a frontend editor app
-  
+
 ### v0.4.0
   - [ ] Investigate existing editors to potentially integrate into frontend editor: CKeditor, maybe?
-  - [ ] Maybe even build the frontend editor app?
+  - [ ] Build a frontend editor app
 
 
 ### License

@@ -55,7 +55,7 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
     $_load_blocks = array_merge( $_load_blocks, [
 //      'content' => [
 //        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockContent' ),
-//        'path' => ACF_PAGE_BUILDER_PATH . '/blocks/class.block.content.php',
+//        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.content.php',
 //      ],
       'columns' => [
         'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockColumns' ),
