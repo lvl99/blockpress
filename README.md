@@ -48,7 +48,6 @@ and have a plain-text version.
     - [x] Create ACF configs for layouts (essentially field group that contains a flexible content field)
     - [x] Create ACF configs for blocks (essentially re-usable flexible content layout fields)
       - [x] Ensure generated ACF configs have consistent reproduceable keys (i.e. not random)
-    - [ ] Create saved templates which are a pre-configured layout with blocks for easily creating new pages
 
 ### v0.2.0
   - [ ] Figure out how to render layouts easily in templates
@@ -57,8 +56,11 @@ and have a plain-text version.
 
 ### v0.3.0
   - [ ] Create/research REST JSON API to fuel a frontend editor app
-
+  
 ### v0.4.0
+  - [ ] Create saved templates which are a pre-configured layout with blocks for easily creating new pages
+
+### v0.5.0
   - [ ] Investigate existing editors to potentially integrate into frontend editor: CKeditor, maybe?
   - [ ] Build a frontend editor app
 
