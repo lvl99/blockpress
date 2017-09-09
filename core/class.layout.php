@@ -66,7 +66,7 @@ class Layout extends Entity {
       'label' => $this->get_prop( 'label' ),
       'instructions' => $this->get_prop( 'instructions' ),
       'layouts' => [],
-      'button_label' => 'Add Layout Block',
+      'button_label' => 'Add Block',
     ], [
       'blocks' => $this->get_blocks(),
     ] );

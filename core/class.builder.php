@@ -141,20 +141,23 @@ class Builder extends Entity {
         try
         {
           require_once( $block_data['path'] );
+
+          // Create the single block instance which is reused
+          $_loaded_block = $block_data;
           $_loaded_block_class = $block_data['class'];
-          $_loaded_blocks[ $block_name ] = $block_data;
-          $_loaded_blocks[ $block_name ]['instance'] = new $_loaded_block_class( [ $_key, $block_name ] );
+          $_loaded_block['instance'] = new $_loaded_block_class();
+
+          // Save loaded block into Builder
+          $this->loaded_blocks[ $block_name ] = $_loaded_block;
           $this->blocks[] = $block_name;
+          $this->_blocks[ $block_name ] = $_loaded_block;
         }
         catch ( \Exception $e )
         {
-          error_log( 'Failed to load Page Builder Block: "' . $block_name . '" with path: "' . $block_data['path'] . '"' );
+          error_log( 'Failed to load Page Builder block: "' . $block_name . '" with path: "' . $block_data['path'] . '"' );
         }
       }
     }
-
-    // Save the list of loaded blocks into the instance for the layouts/templates to refer to
-    $this->loaded_blocks = $_loaded_blocks;
   }
 
   /**
@@ -179,18 +182,22 @@ class Builder extends Entity {
       try
       {
         require_once( $layout_data['path'] );
+
+        // Create a single layout instance which is reused
+        $_loaded_layout = $layout_data;
         $_loaded_layout_class = $layout_data['class'];
-        $_loaded_layouts[ $layout_name ] = $layout_data;
-        $_loaded_layouts[ $layout_name ]['instance'] = new $_loaded_layout_class( [ $_key, $layout_name ] );
+        $_loaded_layout['instance'] = new $_loaded_layout_class();
+
+        // Save loaded layout into Builder
+        $this->loaded_layouts[ $layout_name ] = $_loaded_layout;
         $this->layouts[] = $layout_name;
+        $this->_layouts[ $layout_name ] = $_loaded_layout;
       }
       catch ( \Exception $e )
       {
-        error_log( 'Failed to load Page Builder Layout: "' . $layout_name . '" with path: "' . $layout_data['path'] . '"' );
+        error_log( 'Failed to load Page Builder layout: "' . $layout_name . '" with path: "' . $layout_data['path'] . '"' );
       }
     }
-
-    $this->loaded_layouts = $_loaded_layouts;
   }
 
   /**
@@ -211,37 +218,37 @@ class Builder extends Entity {
    */
   protected function generate_acf ()
   {
-    $_key = $this->get_key();
-    $_layouts = $this->get_layouts();
+    $key = $this->get_key();
+    $layouts = $this->get_layouts();
     $acfpb_fields = [];
     $acfpb_layouts = [];
 
     // Create a true_false field to mark whether to use the Page Builder or not
     $acfpb_builder_enabled = generate_acf_field_true_false( [
-      'key' => $_key . '_enabled',
-      'name' => 'acfpb_' . $_key . '_enabled',
+      'key' => $key . '_enabled',
+      'name' => 'acfpb_' . $key . '_enabled',
       'label' => 'Use ' . $this->get_prop( 'label' ),
       'ui' => 1,
     ] );
     $acfpb_fields[] = $acfpb_builder_enabled;
 
     // For each layout generate the ACF flexible content field for the layout
-    foreach( $_layouts as $layout_name => $layout_instance )
+    foreach( $layouts as $layout_name => $layout_instance )
     {
       $acfpb_layouts[] = $layout_instance->generate_acf();
     }
 
     // Create a select element to choose which layout to use
-    $_select_layouts = [];
+    $acfpb_builder_select_choices = [];
     foreach ( $acfpb_layouts as $index => $acfpb_layout )
     {
-      $_select_layouts[ $_key . '_' . $acfpb_layout['name'] ] = $acfpb_layout['label'];
+      $acfpb_builder_select_choices[ $key . '_' . $acfpb_layout['name'] ] = $acfpb_layout['label'];
     }
     $acfpb_builder_select_layout = generate_acf_field_select( [
-      'key' => $_key . '_layout',
-      'name' => 'acfpb_' . $_key . '_layout',
+      'key' => $key . '_layout',
+      'name' => 'acfpb_' . $key . '_layout',
       'label' => 'Select layout',
-      'choices' => $_select_layouts,
+      'choices' => $acfpb_builder_select_choices,
       'conditional_logic' => [
         [
           [
@@ -260,9 +267,14 @@ class Builder extends Entity {
       $acfpb_layout['conditional_logic'] = [
         [
           [
+            'field' => $acfpb_builder_enabled['key'],
+            'operator' => '==',
+            'value' => '1',
+          ],
+          [
             'field' => $acfpb_builder_select_layout['key'],
             'operator' => '==',
-            'value' => $_key . '_' . $acfpb_layout['name']
+            'value' => $key . '_' . $acfpb_layout['name'],
           ],
         ],
       ];
@@ -271,7 +283,7 @@ class Builder extends Entity {
 
     // Generate the full ACF group config for the Page Builder
     $acf = generate_acf_group( [
-      'key' => $_key,
+      'key' => $key,
       'title' => $this->get_prop( 'label' ),
       'description' => $this->get_prop( 'description' ),
       'fields' => $acfpb_fields,
@@ -302,15 +314,23 @@ class Builder extends Entity {
   /**
    * Get a loaded block instance
    *
-   * @param $block_name
-   * @return {Block}
+   * @param string $block_name
+   * @return array $loaded_block
+   * @throws \Exception
    */
   public function get_block_instance ( $block_name )
   {
     if ( array_key_exists( $block_name, $this->loaded_blocks ) )
     {
-      return $this->loaded_blocks[ $block_name ]['instance'];
+      if ( array_key_exists( 'instance', $this->loaded_blocks[ $block_name ] ) )
+      {
+        return $this->loaded_blocks[ $block_name ]['instance'];
+      } else {
+        throw new \Exception( 'No instance was created for block "' . $block_name . '"' );
+      }
     }
+
+    throw new \Exception( 'Block "' . $block_name . '" does not exist' );
   }
 
   /**
@@ -332,7 +352,7 @@ class Builder extends Entity {
     // Get each named block instance
     foreach ( $block_names as $block_name )
     {
-      $_blocks[ $block_name ] = lvl99_acf_page_builder()->get_block_instance( $block_name );
+      $_blocks[ $block_name ] = $this->get_block_instance( $block_name );
     }
 
     return $_blocks;
@@ -341,15 +361,23 @@ class Builder extends Entity {
   /**
    * Get a loaded layout instance
    *
-   * @param $layout_name
-   * @return {Layout}
+   * @param string $layout_name
+   * @return array $loaded_layout
+   * @throws \Exception
    */
   public function get_layout_instance ( $layout_name )
   {
     if ( array_key_exists( $layout_name, $this->loaded_layouts ) )
     {
-      return $this->loaded_layouts[ $layout_name ]['instance'];
+      if ( array_key_exists( 'instance', $this->loaded_layouts[ $layout_name ] ) )
+      {
+        return $this->loaded_layouts[ $layout_name ]['instance'];
+      } else {
+        throw new \Exception( 'No instance was created for layout "' . $layout_name . '"' );
+      }
     }
+
+    throw new \Exception( 'Layout "' . $layout_name . '" does not exist' );
   }
 
   /**

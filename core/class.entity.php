@@ -203,7 +203,7 @@ class Entity {
       $blocks = $this->get_prop( 'blocks' );
     }
 
-    // If again no blocks specified, register all of the blocks
+    // If again no blocks specified, register all of the blocks within this entity
     if ( empty( $blocks ) )
     {
       $blocks = array_keys( lvl99_acf_page_builder()->get_prop( 'loaded_blocks' ) );
@@ -266,7 +266,7 @@ class Entity {
    */
   public function initialise_layouts ( $layouts = [] )
   {
-    // If no layouts given, register all of the layouts
+    // If no layouts given, register all of the layouts to use within this entity
     if ( empty( $layouts ) )
     {
       $layouts = array_keys( lvl99_acf_page_builder()->get_prop( 'loaded_layouts' ) );

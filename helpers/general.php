@@ -32,17 +32,6 @@ function encode_key ( $key )
 }
 
 /**
- * Return the full class with namespace
- *
- * @param $class
- * @return string
- */
-function get_namespace_class ( $class )
-{
-  return '\\' . __NAMESPACE__ . '\\' . $class;
-}
-
-/**
  * Load the blocks as sub_fields/layouts
  *
  * @param string $type
@@ -69,7 +58,7 @@ function load_blocks_into_acf_field ( $type, $acf_config, $options = [] )
         {
           $_layout_blocks[] = $block_instance['instance']->generate_acf( $_layout_block_key );
 
-          // Fetch the global block instances
+        // Fetch the block instance from the global builder
         } else {
           $_layout_blocks[] = lvl99_acf_page_builder()->get_block_instance( $block_name )->generate_acf( $_layout_block_key );
         }

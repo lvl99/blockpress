@@ -53,25 +53,27 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
   function lvl99_acf_page_builder_load_blocks ( $_load_blocks )
   {
     $_load_blocks = array_merge( $_load_blocks, [
-//      'content' => [
-//        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockContent' ),
-//        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.content.php',
-//      ],
-      'columns' => [
-        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockColumns' ),
-        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.columns.php',
-      ],
+      // Basic blocks which don't rely on other blocks should be loaded first
       'text' => [
-        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockText' ),
+        'class' => 'LVL99\\ACFPageBuilder\\BlockText',
         'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.text.php',
       ],
       'image' => [
-        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockImage' ),
+        'class' => 'LVL99\\ACFPageBuilder\\BlockImage',
         'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.image.php',
       ],
       'carousel' => [
-        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'BlockCarousel' ),
+        'class' => 'LVL99\\ACFPageBuilder\\BlockCarousel',
         'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.carousel.php',
+      ],
+      // Blocks which can reference other blocks should be loaded last
+//      'content' => [
+//        'class' => 'LVL99\\ACFPageBuilder\\BlockContent',
+//        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.content.php',
+//      ],
+      'columns' => [
+        'class' => 'LVL99\\ACFPageBuilder\\BlockColumns',
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.columns.php',
       ],
     ] );
 
@@ -89,7 +91,7 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
   {
     $_load_layouts = array_merge( $_load_layouts, [
       'page' => [
-        'class' => LVL99\ACFPageBuilder\get_namespace_class( 'LayoutPage' ),
+        'class' => 'LVL99\\ACFPageBuilder\\LayoutPage',
         'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/layouts/class.layout.page.php',
       ],
     ] );
