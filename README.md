@@ -8,8 +8,8 @@ This is currently a proof of concept using [ACF PRO](http://www.advancedcustomfi
 as a way to layout a page's content beyond using the basic text editor.
 
 The main key features is that it should:
-  1. Uses ACF PRO as is with no modifications or custom extensions; 
-  2. Provides an extensible blueprint for creating rich page layouts;
+  1. Use ACF PRO as is with no modifications or custom extensions; 
+  2. Provide an extensible blueprint for creating rich page layouts;
   3. Does not enforce any opinionated or poorly-crafted CSS -- theme developers will have an agnostic and general
      representation of the content to do what they will with the presentation side of things.
 
