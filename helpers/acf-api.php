@@ -44,7 +44,7 @@ function generate_acf_group ( $acf_config )
   ], $acf_config );
 
   // Ensure keys are sanitised
-  $_group['key'] = 'group_acfpb_' . encode_key( $_group['key'] );
+  $_group['key'] = 'group_' . encode_key( $_group['key'] );
 
   return $_group;
 }
@@ -482,7 +482,7 @@ function generate_acf_field ( $type, $acf_config, $options = [] )
   // Ensure sanitised key
   if ( array_key_exists( 'key', $_field ) )
   {
-    $_field['key'] = 'field_acfpb_' . encode_key( $_field['key'] );
+    $_field['key'] = 'field_' . encode_key( $_field['key'] );
   }
 
   return $_field;
@@ -693,7 +693,7 @@ function generate_acf_flexible_content_layout ( $acf_config, $options = [] )
   ], $acf_config );
 
   // Ensure keys are sanitised
-  $_layout['key'] = 'layout_acfpb_' . encode_key( $_layout['key'] );
+  $_layout['key'] = 'layout_' . encode_key( $_layout['key'] );
 
   return $_layout;
 }

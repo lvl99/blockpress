@@ -16,24 +16,5 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class LayoutPage extends Layout {
   public $name = 'page';
-  public $label = 'Page Builder: Page Layout';
-  public $acf_options = [
-    'location' => [
-      [
-        [
-          'param' => 'post_type',
-          'operator' => '==',
-          'value' => 'post',
-        ],
-      ],
-      [
-        [
-          'param' => 'post_type',
-          'operator' => '==',
-          'value' => 'page',
-        ],
-      ],
-    ],
-    'position' => 'acf_after_title',
-  ];
+  public $label = 'Page';
 }

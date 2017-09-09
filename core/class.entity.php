@@ -135,7 +135,12 @@ class Entity {
   {
     if ( ! empty( $key ) )
     {
-      $this->key = [ $key ];
+      if ( is_array( $key ) )
+      {
+        $this->key = $key;
+      } else {
+        $this->key = [ $key ];
+      }
 
     // Default to the entity's name
     } else {

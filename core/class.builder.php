@@ -11,21 +11,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Builder extends Entity {
   /**
-   * Current version of the Page Builder
-   *
    * @var string
    */
-  public $VERSION = LVL99_ACF_PAGE_BUILDER;
+  public $name = 'builder';
 
   /**
    * @var string
    */
-  public $key = 'builder';
+  public $label = 'LVL99 ACF Page Builder';
 
   /**
    * @var string
    */
-  public $name = 'Builder';
+  public $description = 'Use LVL99 ACF Page Builder to create custom page/post content layouts';
 
   /**
    * The Page Builder settings
@@ -35,7 +33,7 @@ class Builder extends Entity {
   public $settings = [];
 
   /**
-   * Collection of available blocks
+   * Collection of loaded and available blocks
    *
    * @var array
    * @private
@@ -43,7 +41,7 @@ class Builder extends Entity {
   protected $loaded_blocks = [];
 
   /**
-   * Collection of available layouts
+   * Collection of loaded and available layouts
    *
    * @var array
    * @private
@@ -51,7 +49,7 @@ class Builder extends Entity {
   protected $loaded_layouts = [];
 
   /**
-   * Collection of available templates
+   * Collection of loaded and available templates
    *
    * @var array
    * @private
@@ -59,7 +57,7 @@ class Builder extends Entity {
   protected $loaded_templates = [];
 
   /**
-   * The generate ACF config for the page builder
+   * The generated ACF config for the page builder
    *
    * @var array
    * @protected
@@ -67,14 +65,15 @@ class Builder extends Entity {
   protected $_acf = [];
 
   /**
-   * Class Builder constructor
+   * Class Builder
    *
    * @constructor
    * @param array $options
    */
-  public function __constructor ()
+  public function __construct ()
   {
     // Yeehaw
+    $this->set_key( $this->name );
   }
 
   /**
@@ -93,7 +92,6 @@ class Builder extends Entity {
       'initialising' => FALSE,
       'initialised' => FALSE,
       'file' => __FILE__,
-      'path' => __DIR__,
     ] );
 
     // Load all the blocks, layouts and templates
@@ -115,10 +113,7 @@ class Builder extends Entity {
 
     if ( ! empty( $this->_acf ) )
     {
-      foreach( $this->_acf as $acf_group )
-      {
-        acf_add_local_field_group( $acf_group );
-      }
+      acf_add_local_field_group( $this->_acf );
     }
   }
 
@@ -129,6 +124,8 @@ class Builder extends Entity {
    */
   protected function load_blocks ()
   {
+    $_key = $this->get_key();
+
     /**
      * @filter LVL99\ACFPageBuilder\Builder\load_blocks
      * @param array $load_blocks An associative array of all the blocks to load into the builder
@@ -146,7 +143,7 @@ class Builder extends Entity {
           require_once( $block_data['path'] );
           $_loaded_block_class = $block_data['class'];
           $_loaded_blocks[ $block_name ] = $block_data;
-          $_loaded_blocks[ $block_name ]['instance'] = new $_loaded_block_class();
+          $_loaded_blocks[ $block_name ]['instance'] = new $_loaded_block_class( [ $_key, $block_name ] );
           $this->blocks[] = $block_name;
         }
         catch ( \Exception $e )
@@ -167,6 +164,8 @@ class Builder extends Entity {
    */
   protected function load_layouts ()
   {
+    $_key = $this->get_key();
+
     /**
      * @filter LVL99\ACFPageBuilder\Builder\load_layouts
      * @param array $load_layouts An associative array of all the layouts to load into the builder
@@ -182,7 +181,7 @@ class Builder extends Entity {
         require_once( $layout_data['path'] );
         $_loaded_layout_class = $layout_data['class'];
         $_loaded_layouts[ $layout_name ] = $layout_data;
-        $_loaded_layouts[ $layout_name ]['instance'] = new $_loaded_layout_class();
+        $_loaded_layouts[ $layout_name ]['instance'] = new $_loaded_layout_class( [ $_key, $layout_name ] );
         $this->layouts[] = $layout_name;
       }
       catch ( \Exception $e )
@@ -201,7 +200,7 @@ class Builder extends Entity {
    */
   protected function load_templates ()
   {
-
+    // @TODO
   }
 
   /**
@@ -212,17 +211,92 @@ class Builder extends Entity {
    */
   protected function generate_acf ()
   {
-    $_acf = [];
+    $_key = $this->get_key();
     $_layouts = $this->get_layouts();
+    $acfpb_fields = [];
+    $acfpb_layouts = [];
 
-    // For each layout generate the extra blocks
+    // Create a true_false field to mark whether to use the Page Builder or not
+    $acfpb_builder_enabled = generate_acf_field_true_false( [
+      'key' => $_key . '_enabled',
+      'name' => 'acfpb_' . $_key . '_enabled',
+      'label' => 'Use ' . $this->get_prop( 'label' ),
+      'ui' => 1,
+    ] );
+    $acfpb_fields[] = $acfpb_builder_enabled;
+
+    // For each layout generate the ACF flexible content field for the layout
     foreach( $_layouts as $layout_name => $layout_instance )
     {
-      $_acf[] = $layout_instance->generate_acf();
+      $acfpb_layouts[] = $layout_instance->generate_acf();
     }
 
-    $this->_acf = $_acf;
-    return $_acf;
+    // Create a select element to choose which layout to use
+    $_select_layouts = [];
+    foreach ( $acfpb_layouts as $index => $acfpb_layout )
+    {
+      $_select_layouts[ $_key . '_' . $acfpb_layout['name'] ] = $acfpb_layout['label'];
+    }
+    $acfpb_builder_select_layout = generate_acf_field_select( [
+      'key' => $_key . '_layout',
+      'name' => 'acfpb_' . $_key . '_layout',
+      'label' => 'Select layout',
+      'choices' => $_select_layouts,
+      'conditional_logic' => [
+        [
+          [
+            'field' => $acfpb_builder_enabled['key'],
+            'operator' => '==',
+            'value' => '1',
+          ],
+        ],
+      ],
+    ] );
+    $acfpb_fields[] = $acfpb_builder_select_layout;
+
+    // Attach conditional logic based on the select's value to each generated layout's config
+    foreach ( $acfpb_layouts as $index => $acfpb_layout )
+    {
+      $acfpb_layout['conditional_logic'] = [
+        [
+          [
+            'field' => $acfpb_builder_select_layout['key'],
+            'operator' => '==',
+            'value' => $_key . '_' . $acfpb_layout['name']
+          ],
+        ],
+      ];
+      $acfpb_fields[] = $acfpb_layout;
+    }
+
+    // Generate the full ACF group config for the Page Builder
+    $acf = generate_acf_group( [
+      'key' => $_key,
+      'title' => $this->get_prop( 'label' ),
+      'description' => $this->get_prop( 'description' ),
+      'fields' => $acfpb_fields,
+      'style' => 'seamless',
+      'location' => [
+        [
+          [
+            'param' => 'post_type',
+            'operator' => '==',
+            'value' => 'post',
+          ],
+        ],
+        [
+          [
+            'param' => 'post_type',
+            'operator' => '==',
+            'value' => 'page',
+          ],
+        ],
+      ],
+      'position' => 'acf_after_title',
+    ] );
+
+    $this->_acf = $acf;
+    return $acf;
   }
 
   /**

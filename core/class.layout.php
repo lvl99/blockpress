@@ -13,13 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Layout extends Entity {
   /**
-   * The unique key for the layout field group
-   *
-   * @var string
-   */
-  public $key = '';
-
-  /**
    * The name of the layout
    *
    * @var string
@@ -48,12 +41,6 @@ class Layout extends Entity {
   public $instructions = '';
 
   /**
-   * The extra ACF options for this layout
-   * @var array
-   */
-  public $acf_options = [];
-
-  /**
    * Class Layout
    *
    * @constructor
@@ -63,8 +50,6 @@ class Layout extends Entity {
   {
     $this->set_key( $key );
     $this->initialise_blocks();
-    // @TODO figure out how to process the extra options to apply $pecial $auce
-    // $this->initialise_fields( [ 'acf_options' ] );
   }
 
   /**
@@ -75,29 +60,16 @@ class Layout extends Entity {
     $_key = $this->get_key();
 
     // Build the ACF fields for the layout blocks
-    $acf_layout_blocks = generate_acf_field_flexible_content( [
+    $_acf = generate_acf_field_flexible_content( [
       'key' => $_key,
       'name' => $this->get_prop( 'name' ),
-      'label' => 'Content',
+      'label' => $this->get_prop( 'label' ),
       'instructions' => $this->get_prop( 'instructions' ),
       'layouts' => [],
       'button_label' => 'Add Layout Block',
     ], [
       'blocks' => $this->get_blocks(),
     ] );
-
-    // Generate the main layout ACF config
-    $acf_group = array_merge( $this->get_prop( 'acf_options' ), [
-      'key' => $_key,
-      'title' => $this->get_prop( 'label' ),
-      'description' => $this->get_prop( 'description' ),
-      'fields' => [
-        $acf_layout_blocks,
-      ],
-    ] );
-
-    // Generate the full ACF group config
-    $_acf = generate_acf_group( $acf_group );
 
     return $_acf;
   }
