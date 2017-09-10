@@ -63,6 +63,17 @@ and have a plain-text version.
 ### v0.5.0
   - [ ] Investigate existing editors to potentially integrate into frontend editor: CKeditor, maybe?
   - [ ] Build a frontend editor app
+  
+
+## Installation
+
+Want to try this out quickly? If you use composer, add this to your `repositories` config:
+
+```json
+{
+
+}
+```
 
 
 ## Contributing
