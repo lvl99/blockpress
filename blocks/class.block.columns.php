@@ -16,7 +16,6 @@ class BlockColumns extends Block {
   public $label = 'Columns';
   public $description = 'A row of columns to contain content';
   public $display = 'block';
-  public $fields = [];
   public $customise = [
     [
       '$$' => [

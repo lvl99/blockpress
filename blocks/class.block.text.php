@@ -16,7 +16,7 @@ class BlockText extends Block {
   public $label = 'Text';
   public $description = 'A text block';
   public $display = 'block';
-  public $fields = [
+  public $content = [
     [
       'name' => 'text',
       'label' => 'Text',

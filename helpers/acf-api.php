@@ -693,7 +693,32 @@ function generate_acf_flexible_content_layout ( $acf_config, $options = [] )
   ], $acf_config );
 
   // Ensure keys are sanitised
-  $_layout['key'] = 'layout_' . encode_key( $_layout['key'] );
+  $_layout['key'] = 'field_' . encode_key( $_layout['key'] );
 
   return $_layout;
+}
+
+function generate_acf_page_builder_layout ( $acf_config, $options = [] )
+{
+  $_field = generate_acf_field( 'flexible_content', $acf_config, $options );
+  return $_field;
+}
+
+// Essentially the same as `generate_acf_flexible_content_layout` just with a different key denomination
+function generate_acf_page_builder_block ( $acf_config, $options = [] )
+{
+  $_block = array_merge( [
+    'key' => uniqid(),
+    'name' => '',
+    'label' => '',
+    'display' => 'block',
+    'sub_fields' => [],
+    'min' => '',
+    'max' => '',
+  ], $acf_config );
+
+  // Ensure keys are sanitised
+  $_block['key'] = 'block_' . encode_key( $_block['key'] );
+
+  return $_block;
 }

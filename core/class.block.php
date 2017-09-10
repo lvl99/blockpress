@@ -41,42 +41,39 @@ class Block extends Entity {
   public $display = 'block';
 
   /**
-   * The fields that the block supports
+   * The fields to enter content that the block displays
    *
    * @var array
-   * @protected
    */
-  public $fields = [
+  public $content = [
 
   ];
 
   /**
-   * The fields to customise the block's presentation
+   * The fields to further customise the block, or block's content
    *
    * @var array
-   * @protected
    */
   public $customise = [
 
   ];
 
   /**
-   * The fields to configure the block's behaviour
+   * The fields to configure the block, or its content's, behaviour
    *
    * @var array
-   * @protected
    */
   public $configure = [
 
   ];
 
   /**
-   * The core configuration fields for the block (behaviour or the HTML element itself)
+   * The core configuration fields for the block (behaviour or the block's HTML element itself)
    *
    * @var array
    * @protected
    */
-  public $_configure = [
+  protected $_configure = [
     [
       'label' => 'Element ID',
       'name' => 'element_id',
@@ -92,11 +89,12 @@ class Block extends Entity {
   ];
 
   /**
-   * The ACF config for the block's sub_fields
+   * The generated ACF config for the block's `sub_fields` (essentially a collection of all the fields listed above)
    *
    * @var array
+   * @protected
    */
-  public $acf_sub_fields = [];
+  protected $acf_sub_fields = [];
 
   /**
    * Class Block
@@ -108,7 +106,7 @@ class Block extends Entity {
   {
     $this->set_key( $key );
     $this->initialise_blocks();
-    $this->initialise_fields( [ 'fields', 'customise', 'configure', '_configure' ] );
+    $this->initialise_fields( [ 'content', 'customise', 'configure', '_configure' ] );
   }
 
   /**
@@ -132,9 +130,9 @@ class Block extends Entity {
     $_sub_fields = [];
 
     // Process all the basic fields for this block
-    if ( ! empty( $this->get_prop( 'fields' ) ) )
+    if ( ! empty( $this->get_prop( 'content' ) ) )
     {
-      foreach ( $this->get_prop( 'fields' ) as $field )
+      foreach ( $this->get_prop( 'content' ) as $field )
       {
         $_sub_fields[] = generate_acf_field( $field['type'], array_merge( $field, [
           'key' => $_key . '_' . $field['name'],
@@ -180,7 +178,7 @@ class Block extends Entity {
     $this->acf_sub_fields = $_sub_fields;
 
     // Generate the basic config for the block
-    $_acf = generate_acf_flexible_content_layout( [
+    $_acf = generate_acf_page_builder_block( [
       'key' => $_key,
       'name' => $this->get_prop( 'name' ),
       'label' => $this->get_prop( 'label' ),

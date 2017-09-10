@@ -16,7 +16,7 @@ class BlockCarousel extends Block {
   public $label = 'Carousel';
   public $description = 'A carousel of many images';
   public $display = 'block';
-  public $fields = [
+  public $content = [
     [
       'name' => 'images',
       'label' => 'Carousel Images',

@@ -44,13 +44,15 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
   require_once( __DIR__ . '/core/class.template.php' );
 
   /**
-   * Configure the blocks to load
+   * Configure the basic blocks to load
+   * Basic blocks don't require any other block
    *
    * @filter LVL99\ACFPageBuilder\Builder\load_blocks
    * @param array $_load_blocks
+   * @priority 10
    * @returns array
    */
-  function lvl99_acf_page_builder_load_blocks ( $_load_blocks )
+  function lvl99_acf_page_builder_load_basic_blocks ( $_load_blocks )
   {
     $_load_blocks = array_merge( $_load_blocks, [
       // Basic blocks which don't rely on other blocks should be loaded first
@@ -66,11 +68,24 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
         'class' => 'LVL99\\ACFPageBuilder\\BlockCarousel',
         'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.carousel.php',
       ],
+    ] );
+
+    return $_load_blocks;
+  }
+
+  /**
+   * Configure the special blocks to load
+   * Special blocks do require other blocks to be loaded before they can load
+   *
+   * @filter LVL99\ACFPageBuilder\Builder\load_blocks
+   * @param array $load_blocks
+   * @priority 20
+   * @returns array
+   */
+  function lvl99_acf_page_builder_load_special_blocks ( $_load_blocks )
+  {
+    $_load_blocks = array_merge( $_load_blocks, [
       // Blocks which can reference other blocks should be loaded last
-//      'content' => [
-//        'class' => 'LVL99\\ACFPageBuilder\\BlockContent',
-//        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.content.php',
-//      ],
       'columns' => [
         'class' => 'LVL99\\ACFPageBuilder\\BlockColumns',
         'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.columns.php',
@@ -113,7 +128,8 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
   }
 
   // Let's make page layout magic!
-  add_action( 'LVL99\ACFPageBuilder\Builder\load_blocks', 'lvl99_acf_page_builder_load_blocks', 10, 1 );
+  add_action( 'LVL99\ACFPageBuilder\Builder\load_blocks', 'lvl99_acf_page_builder_load_basic_blocks', 10, 1 );
+  add_action( 'LVL99\ACFPageBuilder\Builder\load_blocks', 'lvl99_acf_page_builder_load_special_blocks', 20, 1 );
   add_action( 'LVL99\ACFPageBuilder\Builder\load_layouts', 'lvl99_acf_page_builder_load_layouts', 10, 1 );
   add_action( 'acf/init', 'lvl99_acf_page_builder' );
 }

@@ -16,7 +16,7 @@ class BlockImage extends Block {
   public $label = 'Image';
   public $description = 'An image block';
   public $display = 'block';
-  public $fields = [
+  public $content = [
     [
       'name' => 'image',
       'label' => 'Image',

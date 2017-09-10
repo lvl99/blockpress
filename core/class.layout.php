@@ -60,7 +60,7 @@ class Layout extends Entity {
     $_key = $this->get_key();
 
     // Build the ACF fields for the layout blocks
-    $_acf = generate_acf_field_flexible_content( [
+    $_acf = generate_acf_page_builder_layout( [
       'key' => $_key,
       'name' => $this->get_prop( 'name' ),
       'label' => $this->get_prop( 'label' ),
