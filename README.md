@@ -41,6 +41,21 @@ and have a plain-text version.
 > As this is still in the prototyping stage its API will most definitely undergo heavy changes.
 
 
+## Installation
+
+Want to try this experimental plugin out quickly? If you use composer, add this to your `repositories` config:
+
+```json
+  {
+    "type": "vcs",
+    "url": "https://github.com/lvl99/acf-page-builder"
+  }
+```
+
+You can then `composer require lvl99/acf-page-builder` to integrate it with your project and then enable the plugin
+in the WordPress admin area.
+
+
 ## Roadmap
 
 ### v0.1.0
@@ -63,17 +78,6 @@ and have a plain-text version.
 ### v0.5.0
   - [ ] Investigate existing editors to potentially integrate into frontend editor: CKeditor, maybe?
   - [ ] Build a frontend editor app
-  
-
-## Installation
-
-Want to try this out quickly? If you use composer, add this to your `repositories` config:
-
-```json
-{
-
-}
-```
 
 
 ## Contributing
