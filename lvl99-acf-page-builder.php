@@ -33,15 +33,15 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
   define( 'LVL99_ACF_PAGE_BUILDER', '0.1.0' );
   define( 'LVL99_ACF_PAGE_BUILDER_PATH', __DIR__ );
 
-  require_once( __DIR__ . '/helpers/general.php' );
-  require_once( __DIR__ . '/helpers/acf-api.php' );
-  require_once( __DIR__ . '/helpers/field-presets.php' );
-  require_once( __DIR__ . '/helpers/special-sauce.php' );
-  require_once( __DIR__ . '/core/class.entity.php' );
-  require_once( __DIR__ . '/core/class.builder.php' );
-  require_once( __DIR__ . '/core/class.block.php' );
-  require_once( __DIR__ . '/core/class.layout.php' );
-  require_once( __DIR__ . '/core/class.template.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/helpers/general.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/helpers/acf-api.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/helpers/field-presets.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/helpers/special-sauce.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/core/class.entity.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/core/class.builder.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/core/class.block.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/core/class.layout.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/core/class.template.php' );
 
   /**
    * Configure the basic blocks to load
@@ -58,15 +58,15 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
       // Basic blocks which don't rely on other blocks should be loaded first
       'text' => [
         'class' => 'LVL99\\ACFPageBuilder\\BlockText',
-        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.text.php',
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . 'blocks/class.block.text.php',
       ],
       'image' => [
         'class' => 'LVL99\\ACFPageBuilder\\BlockImage',
-        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.image.php',
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . 'blocks/class.block.image.php',
       ],
       'carousel' => [
         'class' => 'LVL99\\ACFPageBuilder\\BlockCarousel',
-        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.carousel.php',
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . 'blocks/class.block.carousel.php',
       ],
     ] );
 
