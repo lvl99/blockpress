@@ -207,6 +207,10 @@ class BlockMedia extends ACFPageBuilder\Block {
     // Content, Customise and Configure fields are all combined into the `sub_fields` which is a zero-indexed array.
     // Therefore we need to reference the fields we want to manipulate by number.
     //
+    // One minor gotcha at the moment is that the customise/configure groups each have a tab field added before them,
+    // so if you want to reference a field within one of those areas you might need to add 1/2 to the index (1 for
+    // customise and 2 for configure).
+    //
     $select_field_key = $acf['sub_fields'][0]['key'];
 
     //
