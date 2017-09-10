@@ -4,7 +4,7 @@ v0.1.0
 
 By Matt Scheurich <matt@lvl99.com>
 
-This is currently a proof of concept using [ACF PRO](http://www.advancedcustomfields.com) and its flexible content field
+This is currently a proof of concept using [ACF](http://www.advancedcustomfields.com) and its flexible content field
 as a way to layout a page's content beyond using the basic text editor.
 
 The main key features is that it should:
