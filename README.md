@@ -55,6 +55,8 @@ Want to try this experimental plugin out quickly? If you use composer, add this 
 You can then `composer require lvl99/acf-page-builder` to integrate it with your project and then enable the plugin
 in the WordPress admin area.
 
+Otherwise just download a ZIP from github: https://github.com/lvl99/acf-page-builder/archive/master.zip
+
 
 ## Roadmap
 
