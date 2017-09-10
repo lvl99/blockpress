@@ -65,6 +65,15 @@ and have a plain-text version.
   - [ ] Build a frontend editor app
 
 
-### License
+## Contributing
+
+Interested in contributing to design or development? You can fork and make pull requests (there's only one branch at the
+moment anyway).
+
+I have a private Slack setup too if anyone wants to take part in real-time discussion. You can email <matt@lvl99.com>
+for an invite. 
+
+
+## License
 
 [GPL 2.0+](LICENSE.md)
