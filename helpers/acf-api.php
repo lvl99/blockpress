@@ -108,6 +108,17 @@ function generate_acf_field ( $type, $acf_config, $options = [] )
       ] );
       break;
 
+    case 'range':
+      $_field = array_merge( $_field, [
+        'default_value' => '',
+        'min' => '',
+        'max' => '',
+        'step' => '',
+        'prepend' => '',
+        'append' => '',
+      ] );
+      break;
+
     case 'email':
       $_field = array_merge( $_field, [
         'type' => 'email',
@@ -503,6 +514,12 @@ function generate_acf_field_textarea ( $acf_config, $options = [] )
 function generate_acf_field_number ( $acf_config, $options = [] )
 {
   $_field = generate_acf_field( 'number', $acf_config, $options );
+  return $_field;
+}
+
+function generate_acf_field_range ( $acf_config, $options = [] )
+{
+  $_field = generate_acf_field( 'range', $acf_config, $options );
   return $_field;
 }
 
