@@ -12,14 +12,14 @@ Version: 0.1.0
 /**
  * # ACF Page Builder
  *
- * v0.1.0
+ * v0.2.0
  *
  * Create rich page layouts using ACF PRO. No need for Gutenberg, Divi Builder or Visual Composer! ... well, maybe...
  *
  * - Create re-usable blocks: text, image, carousel, columns, etc.
  * - Customise the blocks in your layout with minimal markup and using your own theme's classes and conventions.
  *   These blocks can refer to other blocks, e.g. columns can hold other blocks
- * - Save pre-configured layouts and blocks as templates to re-use on other pages
+ * - Render blocks in templates
  * - Much more to do...
  *
  */
@@ -33,6 +33,7 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
   define( 'LVL99_ACF_PAGE_BUILDER', '0.1.0' );
   define( 'LVL99_ACF_PAGE_BUILDER_PATH', __DIR__ );
 
+  // ACF Page Builder dependencies
   require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/helpers/general.php' );
   require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/helpers/acf-api.php' );
   require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/helpers/field-presets.php' );
@@ -58,15 +59,15 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
       // Basic blocks which don't rely on other blocks should be loaded first
       'text' => [
         'class' => 'LVL99\\ACFPageBuilder\\BlockText',
-        'path' => LVL99_ACF_PAGE_BUILDER_PATH . 'blocks/class.block.text.php',
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/core/blocks/class.block.text.php',
       ],
       'image' => [
         'class' => 'LVL99\\ACFPageBuilder\\BlockImage',
-        'path' => LVL99_ACF_PAGE_BUILDER_PATH . 'blocks/class.block.image.php',
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/core/blocks/class.block.image.php',
       ],
       'carousel' => [
         'class' => 'LVL99\\ACFPageBuilder\\BlockCarousel',
-        'path' => LVL99_ACF_PAGE_BUILDER_PATH . 'blocks/class.block.carousel.php',
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/core/blocks/class.block.carousel.php',
       ],
     ] );
 
@@ -88,7 +89,7 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
       // Blocks which can reference other blocks should be loaded last
       'columns' => [
         'class' => 'LVL99\\ACFPageBuilder\\BlockColumns',
-        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/blocks/class.block.columns.php',
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/core/blocks/class.block.columns.php',
       ],
     ] );
 
@@ -107,7 +108,7 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
     $_load_layouts = array_merge( $_load_layouts, [
       'page' => [
         'class' => 'LVL99\\ACFPageBuilder\\LayoutPage',
-        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/layouts/class.layout.page.php',
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/core/layouts/class.layout.page.php',
       ],
     ] );
 

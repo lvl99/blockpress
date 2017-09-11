@@ -10,6 +10,33 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Get a WP post/page
+ *
+ * @param int
+ * @returns \WP_Post
+ */
+function get_post ( $post_id = NULL )
+{
+  if ( ! empty( $post_id ) )
+  {
+    // Already WP_Post
+    if ( is_a( $post_id, 'WP_Post' ) )
+    {
+      return $post_id;
+    }
+    // Get post by slug
+    else if ( is_string( $post_id ) ) {
+      return \get_page_by_path( $post_id, OBJECT, lvl99_acf_page_builder()->get_setting( 'post_types' ) );
+    }
+    // Get post by ID
+    else
+    {
+      return \get_post( $post_id );
+    }
+  }
+}
+
+/**
  * Sanitise a string which is used for key, name, etc.
  *
  * @param string $key

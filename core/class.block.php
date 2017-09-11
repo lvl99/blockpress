@@ -187,4 +187,16 @@ class Block extends Entity {
 
     return $_acf;
   }
+
+  /**
+   * Render the block in the template view
+   *
+   * @param string $layout_name The name of the layout being used (optional)
+   * @param array $options Extra options to affect the rendering
+   * @returns mixed
+   */
+  public function render ( $post, $layout_name = '', $options = [] )
+  {
+    return lvl99_acf_page_builder()->render_block( $post, $this->get_prop( 'name' ), $layout_name, $options );
+  }
 }

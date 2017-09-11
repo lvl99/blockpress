@@ -1,0 +1,7 @@
+{##
+ # Carousel Block
+ #}
+
+<div {% if data.block.element_id %} id="{{ data.block.element_id }}" {% endif %} class="layout-block-columns row {{ data.block.element_class }}">
+  {{ dump(data) }}
+</div>

@@ -1,0 +1,19 @@
+{##
+ # Image Block
+ #}
+
+<figure {% if data.block.element_id %} id="{{ data.block.element_id }}" {% endif %} class="layout-block-image {{ data.block.element_class }}">
+  {% if data.content.image.srcset %}
+    <img src="{{ data.content.image.src }}" srcset="{{ data.content.image.srcset }}" alt="{{ data.content.image.title }}" />
+  {% else %}
+    <img src="{{ data.content.image.src }}" alt="" />
+  {% endif %}
+  
+  {% if data.content.image.caption %}
+    <figcaption>
+      {{ data.content.image.caption }}
+    </figcaption>
+  {% endif %}
+  
+  {{ dump(data) }}
+</figure>

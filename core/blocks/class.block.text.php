@@ -24,6 +24,11 @@ class BlockText extends Block {
       'tabs' => 'all',
       'toolbar' => 'full',
       'media_upload' => 1,
-    ]
+    ],
   ];
+
+  public function render_block ( $template )
+  {
+
+  }
 }

@@ -1,0 +1,8 @@
+{##
+ # Text Block
+ #}
+
+<div {% if data.block.element_id %} id="{{ data.block.element_id }}" {% endif %} class="layout-block-text {{ data.block.element_class }}">
+  {{ data.content.text }}
+  {{ dump(data) }}
+</div>

@@ -1,0 +1,14 @@
+{##
+ # Columns Block
+ #}
+
+<div {% if data.block.element_id %} id="{{ data.block.element_id }}" {% endif %} class="layout-block-columns row {{ data.block.element_class }}">
+  {# @TODO figure out how to output nested blocks
+    {% for column in data.content.columns %}
+      <div {% if column.element_id %} id="{{ column.element_id }}" {% endif %} class="{{ column.element_class }}">
+        {{ dump(column) }}
+      </div>
+    {% endfor %}
+  #}
+  {{ dump(data) }}
+</div>

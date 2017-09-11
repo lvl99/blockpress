@@ -73,4 +73,16 @@ class Layout extends Entity {
 
     return $_acf;
   }
+
+  /**
+   * Render the layout
+   *
+   * @param int|string|\WP_Post $post
+   * @param array $options
+   * @returns mixed
+   */
+  public function render ( $post, $options = [] )
+  {
+    return lvl99_acf_page_builder()->render_layout( $post, $this->get_prop( 'name' ), $options );
+  }
 }

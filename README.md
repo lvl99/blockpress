@@ -1,6 +1,6 @@
 # LVL99 ACF Page Builder
 
-v0.1.0
+v0.2.0
 
 By Matt Scheurich <matt@lvl99.com>
 
@@ -68,6 +68,8 @@ Otherwise just download a ZIP from github: https://github.com/lvl99/acf-page-bui
 
 ### v0.2.0
   - [ ] Figure out how to render layouts easily in templates
+    - [ ] Add in support for Twig rendering language (why on earth WordPress doesn't support something like this already
+          is crazy) 
   - [ ] Create filter for `the_content` which pulls in all the layout meta data to render
   - [ ] Create filter for `the_excerpt` which pulls in all the layout meta data to render with HTML stripped out
 
