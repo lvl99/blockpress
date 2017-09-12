@@ -74,26 +74,49 @@ function encode_key ( $key )
  */
 function load_blocks_into_acf_field ( $type, $acf_config, $options = [] )
 {
+  $allowed_types = [ 'flexible_content', 'group', 'repeater' ];
+
   // Special stuff
-  if ( ! empty( $options ) )
+  if ( ! empty( $options ) && in_array( $type, $allowed_types ) )
   {
+    // Get the layout instance
+    if ( array_key_exists( 'layout', $options ) && is_string( $options['layout'] ) && ! empty( $options['layout'] ) )
+    {
+      $options['layout'] = lvl99_acf_page_builder()->get_layout_instance( $options['layout'] );
+    }
+
     // Load in the layout blocks and generate ACF config for the layouts/sub_fields values
     if ( array_key_exists( 'blocks', $options ) )
     {
       $_blocks = $options['blocks'];
       $_layout_blocks = [];
-      foreach ( $_blocks as $block_name => $block_instance )
+
+      foreach ( $_blocks as $block_name => $block_data )
       {
         $_layout_block_key = ( ! empty( $acf_config['key'] ) ? $acf_config['key'] : ! empty( $acf_config['name'] ) ? $acf_config['name'] : $block_name );
+        $block_instance = NULL;
+        $generated_block = [];
 
         // Block instances already passed
-        if ( is_array( $block_instance ) && array_key_exists( 'instance', $block_instance ) )
+        if ( is_array( $block_data ) && array_key_exists( 'instance', $block_data ) )
         {
-          $_layout_blocks[] = $block_instance['instance']->generate_acf( $_layout_block_key );
+          $block_instance = $block_data['instance'];
 
         // Fetch the block instance from the global builder
         } else {
-          $_layout_blocks[] = lvl99_acf_page_builder()->get_block_instance( $block_name )->generate_acf( $_layout_block_key );
+          $block_instance = lvl99_acf_page_builder()->get_block_instance( $block_name );
+        }
+
+        // Generate the block config and register into the builder's map
+        if ( $block_instance )
+        {
+          $generated_block = $block_instance->generate_acf( $_layout_block_key );
+          $register_options = array_merge( $options, [
+            // Ensure each nested block has a parent listed
+            'parent' => $acf_config['key'],
+          ] );
+          lvl99_acf_page_builder()->register_block_in_map( $block_instance, $generated_block, $register_options );
+          $_layout_blocks[] = $generated_block;
         }
       }
 

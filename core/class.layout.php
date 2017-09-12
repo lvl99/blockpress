@@ -54,10 +54,22 @@ class Layout extends Entity {
 
   /**
    * Generate the ACF config for the layout
+   *
+   * @param string $key
+   * @param array $options
+   * @returns array
    */
-  public function generate_acf ()
+  public function generate_acf ( $key = '', $options = [] )
   {
-    $_key = $this->get_key();
+    $_key = $this->get_namespaced_key( $key );
+
+    // Pass it along...
+    $_options = wp_parse_args( $options, [
+      'generate_key' => $key,
+      'generated_key' => $_key,
+      'layout' => $this->get_prop( 'name' ),
+      'blocks' => $this->get_blocks(),
+    ] );
 
     // Build the ACF fields for the layout blocks
     $_acf = generate_acf_page_builder_layout( [
@@ -67,9 +79,7 @@ class Layout extends Entity {
       'instructions' => $this->get_prop( 'instructions' ),
       'layouts' => [],
       'button_label' => 'Add Block',
-    ], [
-      'blocks' => $this->get_blocks(),
-    ] );
+    ], $_options );
 
     return $_acf;
   }
@@ -81,8 +91,10 @@ class Layout extends Entity {
    * @param array $options
    * @returns mixed
    */
-  public function render ( $post, $options = [] )
+  public function render ( $post = NULL, $options = [] )
   {
-    return lvl99_acf_page_builder()->render_layout( $post, $this->get_prop( 'name' ), $options );
+    return lvl99_acf_page_builder()->render_layout( $post, array_merge( $options, [
+      'layout' => $this->get_prop( 'name' ),
+    ] ) );
   }
 }

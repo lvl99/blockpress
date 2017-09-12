@@ -26,9 +26,4 @@ class BlockText extends Block {
       'media_upload' => 1,
     ],
   ];
-
-  public function render_block ( $template )
-  {
-
-  }
 }

@@ -113,18 +113,27 @@ class Block extends Entity {
    * Generate the code to use within ACF
    *
    * @param string $key
+   * @param array $options
    * @protected
    * @returns array
    */
-  public function generate_acf ( $key = '' )
+  public function generate_acf ( $key = '', $options = [] )
   {
     $_key = $this->get_key();
 
     // If a namespace key was given, ensure it's at the start
     if ( ! empty( $key ) )
     {
-      $_key = sanitise_key( $key ) . '_' . $_key;
+      $_key = $this->get_namespaced_key( $key );
     }
+
+    $_options = wp_parse_args( $options, [
+      'generate_key' => $_key,
+      'layout' => '',
+      'block' => $this->get_prop( 'name' ),
+      // @NOTE Dunno if I should put `blocks` here
+      // 'blocks' => $this->get_blocks(),
+    ] );
 
     // Generate all the fields for this block
     $_sub_fields = [];
@@ -145,6 +154,7 @@ class Block extends Entity {
     {
       $_sub_fields[] = generate_acf_field_tab( [
         'label' => 'Customise',
+        'name' => 'acfpb_block_customise',
       ] );
 
       foreach ( $this->get_prop( 'customise' ) as $field )
@@ -161,6 +171,7 @@ class Block extends Entity {
       // Add the configure tab
       $_sub_fields[] = generate_acf_field_tab( [
         'label' => 'Configure',
+        'name' => 'acfpb_block_configure',
       ] );
 
       $_configure = array_merge( $this->get_prop( 'configure' ), $this->get_prop( '_configure' ) );
@@ -183,20 +194,31 @@ class Block extends Entity {
       'name' => $this->get_prop( 'name' ),
       'label' => $this->get_prop( 'label' ),
       'sub_fields' => $_sub_fields,
-    ] );
+    ], $_options );
 
     return $_acf;
   }
 
   /**
-   * Render the block in the template view
+   * Register the block within the global builder's map
    *
-   * @param string $layout_name The name of the layout being used (optional)
-   * @param array $options Extra options to affect the rendering
-   * @returns mixed
+   * @param array $acf
    */
-  public function render ( $post, $layout_name = '', $options = [] )
+  public function register_in_map ( $acf, $options = [] )
   {
-    return lvl99_acf_page_builder()->render_block( $post, $this->get_prop( 'name' ), $layout_name, $options );
+    lvl99_acf_page_builder()->register_block_in_map( $this, $acf, $options );
+  }
+
+  /**
+   * Render the block for the post
+   *
+   * @param int|string|\WP_Post $post
+   * @param array $options
+   */
+  public function render ( $post = NULL, $options = [] )
+  {
+    lvl99_acf_page_builder()->render_block( $post, array_merge( $options, [
+      'block' => $this->get_prop( 'name' ),
+    ] ) );
   }
 }

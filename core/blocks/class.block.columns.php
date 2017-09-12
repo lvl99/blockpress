@@ -16,6 +16,18 @@ class BlockColumns extends Block {
   public $label = 'Columns';
   public $description = 'A row of columns to contain content';
   public $display = 'block';
+  public $content = [
+    // This is actually a dummy field that will be replaced by the real field in the `generate_acf` method below
+    [
+      'name' => 'columns',
+      'label' => 'Columns',
+      'type' => 'repeater',
+      'layout' => 'block',
+      'button_label' => 'Add Column',
+      'sub_fields' => [],
+    ],
+  ];
+
   public $customise = [
     [
       '$$' => [
@@ -43,10 +55,17 @@ class BlockColumns extends Block {
   // By default any `flexible_content` field will support all layouts defined in the Page Builder
   public $blocks = [ 'text', 'image', 'carousel' ];
 
-  public function generate_acf ( $key = '' )
+  // Custom implementation of the generate_acf since this block has fields which need extra massaging
+  public function generate_acf ( $key = '', $options = [] )
   {
-    $acf = parent::generate_acf( $key );
+    $settings = array_merge( $options, [
+      'key' => $key,
+      'layout' => '',
+    ] );
+    $acf = parent::generate_acf( $key, $options );
 
+    // Create the real repeater field
+    // We do it here because the flexible content field that we want to repeat relies this field's key
     $acf_repeater = generate_acf_field_repeater( [
       'key' => $this->get_namespaced_key( $key ),
       'name' => $this->get_prop( 'name' ),
@@ -57,6 +76,7 @@ class BlockColumns extends Block {
       'sub_fields' => [],
     ]);
 
+    // Generate the sub_fields that represent the repeatable content for the field above
     $acf_column = generate_acf_field_flexible_content( [
       'key' => $this->get_namespaced_key( $key ) . '_column',
       'name' => 'content',
@@ -65,6 +85,7 @@ class BlockColumns extends Block {
       'button_label' => 'Add Layout Block',
       'layouts' => [],
     ], [
+      'layout' => $settings['layout'],
       'blocks' => $this->get_blocks(), // Attaching the blocks will load the layout blocks within this flexible_content
     ] );
 
@@ -72,7 +93,7 @@ class BlockColumns extends Block {
     $acf_repeater['sub_fields'][] = $acf_column;
 
     // Ensure this field is the first in the block's sub_fields
-    array_unshift( $acf['sub_fields'], $acf_repeater );
+    $acf['sub_fields'][0] = $acf_repeater;
 
     return $acf;
   }

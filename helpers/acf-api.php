@@ -11,7 +11,7 @@ namespace LVL99\ACFPageBuilder;
  * @param $acf_config
  * @return array
  */
-function generate_acf_group ( $acf_config )
+function generate_acf_group ( $acf_config, $options = [] )
 {
   $_group = array_merge( [
     'key' => uniqid(),

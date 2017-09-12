@@ -2,7 +2,7 @@
  # Text Block
  #}
 
-<div {% if data.block.element_id %} id="{{ data.block.element_id }}" {% endif %} class="layout-block-text {{ data.block.element_class }}">
-  {{ data.content.text }}
-  {{ dump(data) }}
+<div {% if configure.element_id %} id="{{ configure.element_id }}" {% endif %} class="layout-block-text {{ configure.element_class }}">
+  {{ content.text }}
+  {{ dump() }}
 </div>

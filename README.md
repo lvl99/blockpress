@@ -68,8 +68,7 @@ Otherwise just download a ZIP from github: https://github.com/lvl99/acf-page-bui
 
 ### v0.2.0
   - [ ] Figure out how to render layouts easily in templates
-    - [ ] Add in support for Twig rendering language (why on earth WordPress doesn't support something like this already
-          is crazy) because it's good to separate data from view
+    - [x] Add in support for Twig rendering language, just coz I like it
     - [ ] Establish consistent array/object schema format for referring to a block's field values
   - [ ] Create filter for `the_content` which pulls in all the layout meta data to render
   - [ ] Create filter for `the_excerpt` which pulls in all the layout meta data to render with HTML stripped out
