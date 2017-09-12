@@ -125,6 +125,9 @@ class Builder extends Entity {
       'twig_options' => [
         'cache' => get_temp_dir() . '/cache/lvl99-acfpb',
       ],
+
+      // Enable the_content and the_excerpt filters to affect the display of the layouts
+      'use_render_hooks' => TRUE,
     ] );
 
     // Set status of Builder loading and initialisation process
@@ -165,10 +168,15 @@ class Builder extends Entity {
 
     // Generate the ACF config to set up the backend with
     $this->generate_acf();
-
     if ( ! empty( $this->_acf ) )
     {
       acf_add_local_field_group( $this->_acf );
+    }
+
+    // Enable the render hooks
+    if ( $this->settings['use_render_hooks'] )
+    {
+      $this->setup_filters();
     }
 
     // Et voila
@@ -186,7 +194,7 @@ class Builder extends Entity {
     $_key = $this->get_key();
 
     /**
-     * @filter LVL99\ACFPageBuilder\Builder\load_blocks
+     * @hook LVL99\ACFPageBuilder\Builder\load_blocks
      * @param array $load_blocks An associative array of all the blocks to load into the builder
      * @returns array
      */
@@ -380,19 +388,132 @@ class Builder extends Entity {
   /**
    * Setup the filters that the Page Builder can apply to
    */
-  public function setup_filters ()
+  protected function setup_filters ()
   {
     add_filter( 'the_content', __NAMESPACE__ . '\\filter_the_content', 10, 2 );
+    add_filter( 'the_content_feed', __NAMESPACE__ . '\\filter_the_content_feed', 10, 2 );
+    add_filter( 'get_the_excerpt', __NAMESPACE__ . '\\filter_get_the_excerpt', 10, 2 );
+    add_filter( 'get_the_excerpt', __NAMESPACE__ . '\\filter_get_the_excerpt', 10, 2 );
   }
 
-  public function filter_the_content ()
+  /**
+   * Fetch the global post's content. If a post has Page Builder enabled, then this will bypass WordPress's
+   * `the_content` filter.
+   *
+   * There's a lot of issues with this approach. #1 is that because this filter doesn't specify the post of which to
+   * fetch the content (the `get_the_content` doesn't have a hookable filter either) it's possible someone could
+   * pass other information to apply the filter with that could be mistakenly overwritten by this one.
+   *
+   * Poor form, WordPress...
+   *
+   * @hook the_content
+   * @param $content
+   * @return string
+   */
+  public function filter_the_content ( $content )
   {
+    $post = get_post();
 
+    // Return the rendered layout content if Page Builder is enabled
+    if ( $this->is_enabled( $post ) )
+    {
+      // If post password required and it doesn't match the cookie.
+      if ( post_password_required( $post ) )
+      {
+        return get_the_password_form( $post );
+      }
+
+      return $this->render_layout( $post );
+    }
+    // Otherwise just return the regular content
+    else
+    {
+      return $content;
+    }
   }
 
-  public function filter_the_excerpt ()
+  /**
+   * Get the content for displaying within a feed.
+   *
+   * Ideally this should get only the textual content of the rendered layout.
+   *
+   * @hook the_content_feed
+   * @param string $content
+   * @param string $feed_type
+   * @param int|string|\WP_Post
+   * @return string
+   */
+  public function filter_the_content_feed ( $content = '', $feed_type = '', $post = NULL )
   {
+    $post = get_post( $post );
 
+    // Return the rendered layout content if Page Builder is enabled
+    if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
+    {
+      $rendered_layout = $this->render_layout( $post );
+      return strip_tags( $rendered_layout, '' );
+    }
+    // WordPress
+    else
+    {
+      return $content;
+    }
+  }
+
+  /**
+   * Fetch a (specified) post's excerpt. If a post has Page Builder enabled, then this will bypass WordPress's
+   * `get_the_excerpt` filter.
+   *
+   * Thankfully this one specifies a post from which to get the excerpt from...
+   *
+   * @param string $excerpt
+   * @param int|\WP_Post $post
+   * @returns string
+   */
+  public function filter_get_the_excerpt ( $excerpt = '', $post = NULL )
+  {
+    $post = get_post( $post );
+
+    // If post password required and it doesn't match the cookie.
+    if ( post_password_required( $post ) )
+    {
+      return __( 'There is no excerpt because this is a protected post.' );
+    }
+
+    // Return the rendered layout content if Page Builder is enabled
+    if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
+    {
+      $rendered_layout = $this->render_layout( $post );
+      return strip_tags( $rendered_layout, '' );
+    }
+    // Return the WordPress default excerpt
+    else
+    {
+      return $excerpt;
+    }
+  }
+
+  /**
+   * Fetch the global post's excerpt. If a post has Page Builder enabled, then this will bypass WordPress's
+   * `the_excerpt_rss` filter.
+   *
+   * @param string $excerpt
+   * @returns string
+   */
+  public function filter_the_excerpt_rss ( $excerpt = '', $post = NULL )
+  {
+    $post = get_post( $post );
+
+    // Return the rendered layout excerpt if Page Builder is enabled
+    if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
+    {
+      return $this->filter_get_the_excerpt( $excerpt, $post );
+    }
+    // Return the WordPress excerpt
+    else
+    {
+      return $excerpt;
+    }
   }
 
   /**

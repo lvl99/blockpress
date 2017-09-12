@@ -17,6 +17,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function get_post ( $post_id = NULL )
 {
+  global $post;
+
   if ( ! empty( $post_id ) )
   {
     // Already WP_Post
@@ -33,6 +35,10 @@ function get_post ( $post_id = NULL )
     {
       return \get_post( $post_id );
     }
+  }
+  else
+  {
+    return $post;
   }
 }
 
