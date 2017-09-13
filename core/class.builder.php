@@ -67,11 +67,14 @@ class Builder extends Entity {
   /**
    * The map of the blocks/fields in relation to the ACF config
    *
+   * @TODO WIP
+   *
    * @var array
    * @protected
    */
   protected $_map = [];
   protected $_flatmap = [];
+  protected $_index = [];
 
   /**
    * Twig environment for rendering templates
@@ -232,7 +235,7 @@ class Builder extends Entity {
           // Create the single block instance which is reused
           $_loaded_block = $block_data;
           $_loaded_block_class = $block_data['class'];
-          $_loaded_block['instance'] = new $_loaded_block_class();
+          $_loaded_block['instance'] = new $_loaded_block_class( $this->get_appended_key( $block_name ) );
 
           // Save loaded block into Builder
           $this->loaded_blocks[ $block_name ] = $_loaded_block;
@@ -273,7 +276,7 @@ class Builder extends Entity {
         // Create a single layout instance which is reused
         $_loaded_layout = $layout_data;
         $_loaded_layout_class = $layout_data['class'];
-        $_loaded_layout['instance'] = new $_loaded_layout_class();
+        $_loaded_layout['instance'] = new $_loaded_layout_class( $this->get_appended_key( $layout_name ) );
 
         // Save loaded layout into Builder
         $this->loaded_layouts[ $layout_name ] = $_loaded_layout;
@@ -298,12 +301,99 @@ class Builder extends Entity {
   }
 
   /**
+   * Generate a new ACF config for a layout
+   *
+   * @param string $layout_name
+   * @param array $options
+   * @returns array
+   */
+  public function generate_layout ( $layout_name, $options = [] )
+  {
+    $_options = wp_parse_args( $options, [
+      'nested_key' => $layout_name,
+    ] );
+
+    $generation_key = $this->get_appended_key( $_options['nested_key'] );
+    $layout_instance = $this->get_layout_instance( $layout_name );
+    $acf_layout = $layout_instance->generate_acf( $generation_key, [
+      'builder' => $this,
+      'layout' => $layout_instance,
+    ] );
+
+    // Add this layout to the builder index
+    $this->_index[ $acf_layout['key'] ] = [
+      'generation_key' => $generation_key,
+      'key' => $acf_layout['key'],
+      'layout' => $layout_instance,
+      'builder' => $this,
+      'acf' => $acf_layout,
+    ];
+
+    return $acf_layout;
+  }
+
+  /**
+   * Generate a new ACF config for a block
+   *
+   * @param $block_name
+   * @param string $layout_name
+   * @param array $options
+   * @returns array
+   */
+  public function generate_block ( $block_name, $layout_name, $options = [] )
+  {
+    $_options = wp_parse_args( $options, [
+      'nested_key' => $layout_name . ':' . $block_name,
+    ] );
+
+    $generation_key = $this->get_appended_key( $_options['nested_key'] );
+    $layout_instance = $this->get_layout_instance( $layout_name );
+    $block_instance = $this->get_block_instance( $block_name );
+
+    // Generate the ACF code
+    $generate_acf_options = array_merge( $_options, [
+      'generation_key' => $generation_key,
+      'builder' => $this,
+      'layout' => $layout_instance,
+      'block' => $block_instance,
+    ] );
+
+    $acf_block = $block_instance->generate_acf( $generation_key, $generate_acf_options );
+
+    // Create registration object for the generated block
+    $register_block = [
+      'generation_key' => $generation_key,
+      'key' => $acf_block['key'],
+      'block' => $block_instance,
+      'layout' => $layout_instance,
+      'builder' => $this,
+      'acf' => $acf_block,
+      'map' => $this->map_block_acf( $block_instance, $acf_block, [
+        'builder' => $this,
+        'layout' => $layout_instance,
+        'block' => $block_instance,
+      ] ),
+    ];
+
+    // Add reference to the parent which uses this generated block
+    if ( array_key_exists( 'parent' , $_options ) )
+    {
+      $register_block['parent'] = $_options['parent'];
+    }
+
+    // Add this block to the builder index
+    $this->_index[ $acf_block['key'] ] = $register_block;
+
+    return $acf_block;
+  }
+
+  /**
    * Generate the code for ACF to recognise the custom fields
    *
    * @protected
    * @returns array
    */
-  protected function generate_acf ()
+  public function generate_acf ()
   {
     $key = $this->get_key();
     $layouts = $this->get_layouts();
@@ -334,7 +424,7 @@ class Builder extends Entity {
 
     // Create a true_false field to mark whether to use the Page Builder or not
     $acfpb_builder_enabled = generate_acf_field_true_false( [
-      'key' => $key . '_enabled',
+      'key' => $key . ':enabled',
       'name' => 'acfpb_' . $key . '_enabled',
       'label' => 'Use ' . $this->get_prop( 'label' ),
       'ui' => 1,
@@ -344,7 +434,7 @@ class Builder extends Entity {
     // For each layout generate the ACF flexible content field for the layout
     foreach( $layouts as $layout_name => $layout_instance )
     {
-      $acfpb_builder_layouts[] = $layout_instance->generate_acf( 'acfpb_' . $key . '_layout' );
+      $acfpb_builder_layouts[] = $this->generate_layout( $layout_name );
     }
 
     // Create a select element to choose which layout to use
@@ -354,7 +444,7 @@ class Builder extends Entity {
       $acfpb_builder_select_choices[ 'acfpb_' . $key . '_layout_' . $acfpb_layout['name'] ] = $acfpb_layout['label'];
     }
     $acfpb_builder_select_layout = generate_acf_field_select( [
-      'key' => $key . '_layout',
+      'key' => $key . ':layout',
       'name' => 'acfpb_' . $key . '_layout',
       'label' => 'Select layout',
       'choices' => $acfpb_builder_select_choices,
@@ -406,285 +496,32 @@ class Builder extends Entity {
   }
 
   /**
-   * Register an entity within the builder's map along with its generated ACF config.
+   * Get a loaded layout instance
    *
-   * The map is a way for the builder to map a block's data/schema to the generate ACF fields. This is used when
-   * getting the ACF meta data from a WP_Post object and then mapping it to the Page Builder's data structure.
-   *
-   * @param Block $block_instance
-   * @param string $generate_acf_key
-   * @param array $acf
+   * @param string $layout_name
+   * @return Layout
+   * @throws \Exception
    */
-  public function register_block_in_map ( $block_instance, $acf, $options = [] )
+  public function get_layout_instance ( $layout_name )
   {
-    $_options = wp_parse_args( $options, [
-      'layout' => '',
-    ] );
-
-    $block_field_groups = [ 'acfpb_block_content', 'acfpb_block_customise', 'acfpb_block_configure' ];
-    $block_fields = [
-      'content' => [],
-      'customise' => [],
-      'configure' => [],
-    ];
-    $current_field_group = 'content';
-
-    foreach ( $acf['sub_fields'] as $index => $_field )
+    if ( array_key_exists( $layout_name, $this->loaded_layouts ) )
     {
-      // Change to the next builder field group
-      if ( $_field['type'] === 'tab' && in_array( $_field['name'], $block_field_groups ) )
+      if ( array_key_exists( 'instance', $this->loaded_layouts[ $layout_name ] ) )
       {
-        $current_field_group = str_replace( 'acfpb_block_', '', $_field['name'] );
-        continue;
-      }
-
-      // Only map fields that have a key
-      if ( array_key_exists( 'key', $_field ) )
-      {
-        $field_options = array_merge( $options, [
-          'field_group' => $current_field_group,
-          'parent' => $acf['key'],
-        ] );
-
-        $block_fields[ $current_field_group ][ $_field['key'] ] = $this->map_block_acf_field( $block_instance, $_field, $field_options );
+        return $this->loaded_layouts[ $layout_name ]['instance'];
+      } else {
+        throw new \Exception( 'No instance was created for layout "' . $layout_name . '"' );
       }
     }
 
-    // The mapped block
-    $map_block = [
-      'acf_key' => $acf['key'],
-      'layout' => $_options['layout'],
-      'block' => $block_instance,
-      'fields' => $block_fields,
-    ];
-
-    // Add to the map
-    $this->_map[ $acf['key'] ] = $map_block;
-    $this->_flatmap[ $acf['key'] ] = $map_block;
-  }
-
-  /**
-   * Map the block's ACF fields. If it finds any sub_fields/layouts, it will map those recursively.
-   *
-   * @param Block $block_instance
-   * @param array $acf_field
-   * @return array
-   */
-  protected function map_block_acf_field ( $block_instance, $acf_field, $options = [] )
-  {
-    // Only map fields with keys
-    if ( array_key_exists( 'key', $acf_field ) )
-    {
-      $map_field = [
-        'key' => $acf_field['key'],
-        'name' => $acf_field['name'],
-      ];
-
-      // Ensure parent is loaded into mapped field data
-      if ( array_key_exists( 'parent', $options ) )
-      {
-        $map_field['parent'] = $options['parent'];
-      }
-
-      // Ensure field_group is loaded into mapped field data
-      if ( array_key_exists( 'field_group', $options ) )
-      {
-        $map_field['field_group'] = $options['field_group'];
-      }
-
-      // Add the type
-      if ( array_key_exists( 'type', $acf_field ) )
-      {
-        $map_field['type'] = $acf_field['type'];
-      }
-
-      // Has layouts defined within
-      if ( array_key_exists( 'layouts', $acf_field ) )
-      {
-        $map_field['layouts'] = [];
-        $layout_options = array_merge( $options, [
-          'parent' => $acf_field['key'],
-        ] );
-        foreach( $acf_field['layouts'] as $acf_layout_key => $acf_layout )
-        {
-          $map_field['layouts'][ $acf_layout_key ] = $this->map_block_acf_field( $block_instance, $acf_layout, $layout_options );
-        }
-      }
-      // Has sub fields defined within
-      else if ( array_key_exists( 'sub_fields', $acf_field ) )
-      {
-        // Check if this is actually a block reference and if so ensure the block instance is linked
-        if ( preg_match( '/^block_/', $acf_field['key'] ) ) {
-          $map_field['block'] = $this->get_block_instance( $acf_field['name'] );
-        }
-
-        // Let's add a type if none set but has sub-fields. We can assume (rightfully?) that this is then a flexible
-        // content layout
-        if ( ! array_key_exists( 'type', $acf_field ) )
-        {
-          $map_field['type'] = 'flexible_content_layout';
-        }
-
-        $map_field['sub_fields'] = [];
-        $sub_field_options = [
-          'parent' => $map_field['key'],
-        ];
-        foreach( $acf_field['sub_fields'] as $index => $acf_sub_field )
-        {
-          // Only map sub fields if they have a type and a key
-          if ( array_key_exists( 'type', $acf_sub_field ) && array_key_exists( 'key', $acf_sub_field ) )
-          {
-            $map_field['sub_fields'][ $acf_sub_field['key'] ] = $this->map_block_acf_field( $block_instance, $acf_sub_field, $sub_field_options );
-          }
-        }
-      }
-
-      // Add field to the flatmap
-      $this->_flatmap[ $map_field['key'] ] = $map_field;
-
-      // Return the mapped field
-      return $map_field;
-    }
-  }
-
-  /**
-   * Setup the filters that the Page Builder can apply to
-   */
-  protected function setup_filters ()
-  {
-    add_filter( 'the_content', [ $this, 'filter_the_content' ], 10, 1 );
-    add_filter( 'the_content_feed', [ $this, 'filter_the_content_feed' ], 10, 2 );
-    add_filter( 'get_the_excerpt', [ $this, 'filter_get_the_excerpt' ], 10, 2 );
-    add_filter( 'the_excerpt_rss', [ $this, 'filter_the_excerpt_rss' ], 10, 1 );
-  }
-
-  /**
-   * Fetch the global post's content. If a post has Page Builder enabled, then this will bypass WordPress's
-   * `the_content` filter.
-   *
-   * There's a lot of issues with this approach. #1 is that because this filter doesn't specify the post of which to
-   * fetch the content (the `get_the_content` doesn't have a hookable filter either) it's possible someone could
-   * pass other information to apply the filter with that could be mistakenly overwritten by this one.
-   *
-   * Poor form, WordPress...
-   *
-   * @hook the_content
-   * @param $content
-   * @return string
-   */
-  public function filter_the_content ( $content = '' )
-  {
-    $post = get_post();
-
-    // Return the rendered layout content if Page Builder is enabled
-    if ( $this->is_enabled( $post ) )
-    {
-      // If post password required and it doesn't match the cookie.
-      if ( post_password_required( $post ) )
-      {
-        return get_the_password_form( $post );
-      }
-
-      return $this->render_layout( $post );
-    }
-    // Otherwise just return the regular content
-    else
-    {
-      return $content;
-    }
-  }
-
-  /**
-   * Get the content for displaying within a feed.
-   *
-   * Ideally this should get only the textual content of the rendered layout.
-   *
-   * @hook the_content_feed
-   * @param string $content
-   * @param string $feed_type
-   * @param int|string|\WP_Post
-   * @return string
-   */
-  public function filter_the_content_feed ( $content = '', $feed_type = '', $post = NULL )
-  {
-    $post = get_post( $post );
-
-    // Return the rendered layout content if Page Builder is enabled
-    if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
-    {
-      $rendered_layout = $this->render_layout( $post );
-      return strip_tags( $rendered_layout, '' );
-    }
-    // WordPress
-    else
-    {
-      return $content;
-    }
-  }
-
-  /**
-   * Fetch a (specified) post's excerpt. If a post has Page Builder enabled, then this will bypass WordPress's
-   * `get_the_excerpt` filter.
-   *
-   * Thankfully this one specifies a post from which to get the excerpt from...
-   *
-   * @hook the_excerpt
-   * @param string $excerpt
-   * @param int|\WP_Post $post
-   * @returns string
-   */
-  public function filter_get_the_excerpt ( $excerpt = '', $post = NULL )
-  {
-    $post = get_post( $post );
-
-    // If post password required and it doesn't match the cookie.
-    if ( post_password_required( $post ) )
-    {
-      return __( 'There is no excerpt because this is a protected post.' );
-    }
-
-    // Return the rendered layout content if Page Builder is enabled
-    if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
-    {
-      $rendered_layout = $this->render_layout( $post );
-      return strip_tags( $rendered_layout, '' );
-    }
-    // Return the WordPress default excerpt
-    else
-    {
-      return $excerpt;
-    }
-  }
-
-  /**
-   * Fetch the post's excerpt. If a post has Page Builder enabled, then this will bypass WordPress's
-   * `the_excerpt_rss` filter.
-   *
-   * @hook the_excerpt_rss
-   * @param string $excerpt
-   * @returns string
-   */
-  public function filter_the_excerpt_rss ( $excerpt = '', $post = NULL )
-  {
-    $post = get_post( $post );
-
-    // Return the rendered layout excerpt if Page Builder is enabled
-    if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
-    {
-      return $this->filter_get_the_excerpt( $excerpt, $post );
-    }
-    // Return the WordPress excerpt
-    else
-    {
-      return $excerpt;
-    }
+    throw new \Exception( 'Layout "' . $layout_name . '" does not exist' );
   }
 
   /**
    * Get a loaded block instance
    *
    * @param string $block_name
-   * @return array $loaded_block
+   * @return Block
    * @throws \Exception
    */
   public function get_block_instance ( $block_name )
@@ -725,28 +562,6 @@ class Builder extends Entity {
     }
 
     return $_blocks;
-  }
-
-  /**
-   * Get a loaded layout instance
-   *
-   * @param string $layout_name
-   * @return array $loaded_layout
-   * @throws \Exception
-   */
-  public function get_layout_instance ( $layout_name )
-  {
-    if ( array_key_exists( $layout_name, $this->loaded_layouts ) )
-    {
-      if ( array_key_exists( 'instance', $this->loaded_layouts[ $layout_name ] ) )
-      {
-        return $this->loaded_layouts[ $layout_name ]['instance'];
-      } else {
-        throw new \Exception( 'No instance was created for layout "' . $layout_name . '"' );
-      }
-    }
-
-    throw new \Exception( 'Layout "' . $layout_name . '" does not exist' );
   }
 
   /**
@@ -887,6 +702,169 @@ class Builder extends Entity {
   }
 
   /**
+   * Map a Builder block's generated ACF fields
+   *
+   * The map is a way for the builder to map a block's data/schema to the generate ACF fields. This is used when
+   * getting the ACF meta data from a WP_Post object and then mapping it to the Page Builder's data structure.
+   *
+   * @param Block $block_instance
+   * @param array $acf
+   * @param array $options
+   * @return array
+   */
+  public function map_block_acf ( $block_instance, $acf, $options = [] )
+  {
+    $_options = wp_parse_args( $options, [
+      'builder' => $this,
+      'layout' => '',
+      'block' => $block_instance,
+    ] );
+
+    $field_groups = [ 'acfpb_block_content', 'acfpb_block_customise', 'acfpb_block_configure' ];
+    $fields = [
+      'content' => [],
+      'customise' => [],
+      'configure' => [],
+    ];
+    $current_field_group = 'content';
+
+    foreach ( $acf['sub_fields'] as $index => $_field )
+    {
+      // Change to the next builder field group
+      if ( $_field['type'] === 'tab' && in_array( $_field['name'], $field_groups ) )
+      {
+        $current_field_group = str_replace( 'acfpb_block_', '', $_field['name'] );
+        continue;
+      }
+
+      // Only map fields that have a key
+      if ( array_key_exists( 'key', $_field ) )
+      {
+        $field_options = array_merge( $options, [
+          'field_group' => $current_field_group,
+          'parent' => $acf['key'],
+        ] );
+
+        $fields[ $current_field_group ][ $_field['key'] ] = $this->map_block_acf_field( $block_instance, $_field, $field_options );
+      }
+    }
+
+    // The mapped block
+    $map_block = [
+      'is_block' => TRUE,
+      'builder' => $_options['builder'],
+      'layout' => $_options['layout'],
+      'block' => $_options['block'],
+      'fields' => $fields,
+    ];
+
+    // Ensure parent is loaded into mapped field data
+    if ( array_key_exists( 'parent', $_options ) )
+    {
+      $map_block['parent'] = $_options['parent'];
+    }
+
+    // Add to the flatmap
+    $this->_flatmap[ $acf['key'] ] = $map_block;
+
+    return $map_block;
+  }
+
+  /**
+   * Map an entity's ACF fields. If it finds any sub_fields/layouts, it will map those recursively.
+   *
+   * @param Entity|Block|Layout $entity
+   * @param array $acf_field
+   * @param array $options
+   * @return array
+   */
+  protected function map_block_acf_field ( $block_instance, $acf_field, $options = [] )
+  {
+    // Only map fields with keys
+    if ( array_key_exists( 'key', $acf_field ) )
+    {
+      $map_field = [
+        'is_field' => TRUE,
+        'key' => $acf_field['key'],
+        'name' => $acf_field['name'],
+      ];
+
+      // Check if this is actually a block reference and if so ensure the block instance is linked
+      if ( preg_match( '/^block_/', $acf_field['key'] ) ) {
+        $map_field['is_block'] = TRUE;
+        $map_field['block'] = $this->get_block_instance( $acf_field['name'] );
+      } else {
+        $map_field['block'] = $block_instance;
+      }
+
+      // Ensure parent is loaded into mapped field data
+      if ( array_key_exists( 'parent', $options ) )
+      {
+        $map_field['parent'] = $options['parent'];
+      }
+
+      // Ensure field_group is loaded into mapped field data
+      if ( array_key_exists( 'field_group', $options ) )
+      {
+        $map_field['field_group'] = $options['field_group'];
+      }
+      else
+      {
+        $map_field['field_group'] = $map_field['block']->get_field_group( $map_field['key'] );
+      }
+
+      // Add the type
+      if ( array_key_exists( 'type', $acf_field ) )
+      {
+        $map_field['type'] = $acf_field['type'];
+      }
+
+      // Has layouts defined within
+      if ( array_key_exists( 'layouts', $acf_field ) )
+      {
+        $map_field['layouts'] = [];
+        $layout_options = array_merge( $options, [
+          'parent' => $acf_field['key'],
+        ] );
+        foreach( $acf_field['layouts'] as $acf_layout_key => $acf_layout )
+        {
+          $map_field['layouts'][ $acf_layout_key ] = $this->map_block_acf_field( $map_field['block'], $acf_layout, $layout_options );
+        }
+      }
+      // Has sub fields defined within
+      else if ( array_key_exists( 'sub_fields', $acf_field ) )
+      {
+        $map_field['sub_fields'] = [];
+        $sub_field_options = [
+          'parent' => $map_field['key'],
+        ];
+
+        // Let's add a type if none set but has sub-fields. We can assume (rightfully?) that this is then a flexible
+        // content layout
+        if ( ! array_key_exists( 'type', $acf_field ) )
+        {
+          $map_field['type'] = 'flexible_content_layout';
+        }
+
+        foreach( $acf_field['sub_fields'] as $index => $acf_sub_field )
+        {
+          // Only map sub fields if they have a type and a key
+          if ( array_key_exists( 'type', $acf_sub_field ) && array_key_exists( 'key', $acf_sub_field ) )
+          {
+            $map_field['sub_fields'][ $acf_sub_field['key'] ] = $this->map_block_acf_field( $map_field['block'], $acf_sub_field, $sub_field_options );
+          }
+        }
+      }
+
+      // Add field to the flatmap
+      $this->_flatmap[ $map_field['key'] ] = $map_field;
+
+      // Return the mapped field
+      return $map_field;
+    }
+  }
+
+  /**
    * The the post's builder render data for rendering
    *
    * This will format the data by block in a structure that mimics how the fields are arranged in the block field
@@ -906,17 +884,19 @@ class Builder extends Entity {
     $post_active_layout = $this->get_active_layout();
     $acf_layout_data = get_field( $post_active_layout, $post );
 
+    // @NOTE Might just use `have_rows()` rather than `get_field`
+
     // No key given, so generate a full object of the block's render data
     if ( empty( $key ) )
     {
-
+      // @TODO figure this out
     }
     else
     {
       // Check if the block key is within the flatmap
       if ( array_key_exists( $key, $this->_flatmap ) )
       {
-
+        // @TODO figure this out and figure out what I started...
       }
       else
       {
@@ -931,45 +911,185 @@ class Builder extends Entity {
   }
 
   /**
-   * Get the key of an
-   *
-   * @param $key
-   */
-  protected function process_render_data ( $key, $post = NULL )
-  {
-    $post = get_post( $post );
-
-    if ( array_key_exists( $key, $this->_flatmap ) )
-    {
-
-    }
-  }
-
-  /**
    * Take the block's ACF row data (retrieved via `the_row()`) and parse it to be structured in a way that we can feed it to
    * the views.
    *
    * @param $acf_layout_row_data
    * @return mixed
    */
-  protected function parse_block_acf_layout_row_data ( $acf_layout_row_data )
+  protected function parse_block_acf_layout_row_data ( $acf_layout_row_data, $options = [] )
   {
-    $data = [
-      'content' => [],
-      'configure' => [],
-      'customise' => [],
-    ];
+    $data = [];
 
-    foreach( $acf_layout_row_data as $field_key => $field_value )
+    $_options = wp_parse_args( $options, [
+      'builder' => $this->get_prop( 'name' ),
+      'layout' => '',
+      'block' => '',
+    ] );
+
+    // Test if its a registered Builder block
+    $is_block = array_key_exists( 'acf_fc_layout', $acf_layout_row_data ) && array_key_exists( $acf_layout_row_data['acf_fc_layout'], $this->get_blocks() );
+
+    // Process block layout
+    if ( $is_block )
     {
-      if ( preg_match( '/^field_/i', $field_key ) )
+      $_options['block'] = $acf_layout_row_data['acf_fc_layout'];
+      foreach ( $acf_layout_row_data as $acf_field_key => $acf_field_value )
       {
-        $field_data = $this->_flatmap[ $field_key ];
-        $data[ $field_data['field_group'] ][ $field_data['name'] ] = $field_value;
+        // Get the block's mapped field data
+        if ( preg_match( '/^field_/i', $acf_field_key ) && array_key_exists( $acf_field_key, $this->_flatmap ) )
+        {
+          $field_data = $this->_flatmap[ $acf_field_key ];
+          $field_value = $this->parse_block_acf_field_data( $acf_field_key, $acf_field_value, $_options );
+
+          // Ensure field is organised into the block's field groups
+          if ( array_key_exists( 'field_group', $field_data ) && ! empty( $field_data['field_group'] ) )
+          {
+            // Create the field group for the field to be organised into
+            if ( ! array_key_exists( $field_data['field_group'], $data ) )
+            {
+              $data[ $field_data['field_group'] ] = [];
+            }
+
+            $data[ $field_data['field_group'] ][ $field_data['name'] ] = $field_value;
+
+          // Support for generating other non-block layouts
+          } else {
+            $data[ $field_data['name'] ] = $field_value;
+          }
+        }
       }
     }
 
-    return $data;
+    // Output the special data object
+    if ( ! empty( $data ) )
+    {
+      // Add builder meta
+      $data['_builder'] = $_options;
+
+      return $data;
+    }
+
+    // Otherwise just output as raw ACF data
+    return $acf_layout_row_data;
+  }
+
+  /**
+   * Parse a block's ACF field data to get its data mapped in a structure which can be referenced in rendering.
+   *
+   * This is a recursive function to cater for crawling through sub_fields, values and numbered arrays which may contain
+   * further fields.
+   *
+   * @param string $acf_field_key
+   * @param mixed $acf_field_value
+   * @return mixed
+   */
+  public function parse_block_acf_field_data ( $acf_field_key, $acf_field_value, $options = [] )
+  {
+    $mode = 'field';
+    $return_output = [];
+    $output = [];
+
+    $_options = wp_parse_args( $options, [
+      'builder' => $this->get_prop( 'name' ),
+      'layout' => '',
+      'block' => '',
+    ] );
+
+    // Not a registered Builder block/field, so carry on...
+    if ( ! array_key_exists( $acf_field_key, $this->_flatmap ) )
+    {
+      return $acf_field_value;
+    }
+
+    // Get the registered block's field information
+    $field_data = $this->_flatmap[ $acf_field_key ];
+
+    // Check if this is a Builder block
+    if ( is_array( $acf_field_value ) && array_key_exists( 'acf_fc_layout', $acf_field_value ) && array_key_exists( $acf_field_value['acf_fc_layout'], $this->loaded_blocks() ) )
+    {
+      $mode = 'block';
+      $output = $this->parse_block_acf_layout_row_data( $acf_field_value, [
+        'builder' => $_options['builder'],
+        'layout' => $_options['layout'],
+        'block' => $acf_field_value['acf_fc_layout'],
+      ] );
+
+    }
+    // Otherwise process it like a regular field
+    else
+    {
+      if ( is_array( $acf_field_value ) )
+      {
+        // Is a collection of fields (e.g. repeater, group)
+        if ( $field_data['type'] === 'repeater' || $field_data['type'] === 'group' )
+        {
+          $mode = 'collection';
+          $data_collection = [];
+          foreach ( $acf_field_value as $collection_index => $collection_value )
+          {
+            foreach ( $collection_value as $collection_field_key => $collection_field_value )
+            {
+              $data_collection_item = $this->parse_block_acf_field_data( $collection_field_key, $collection_field_value, $_options );
+
+              // Might be empty
+              if ( ! is_null( $data_collection_item ) )
+              {
+                $data_collection[] = $data_collection_item;
+              }
+            }
+          }
+
+          $output = $data_collection;
+        }
+        // Field has layouts
+        else if ( $field_data['type'] === 'flexible_content' )
+        {
+          $mode = 'collection';
+          foreach ( $acf_field_value as $layout_row_key => $layout_row_value )
+          {
+            $output[] = $this->parse_block_acf_layout_row_data( $layout_row_value, $_options );
+          }
+
+        }
+        // Field has sub-fields
+        else if ( $field_data['type'] === 'flexible_content_layout' || array_key_exists( 'sub_fields', $field_data ) )
+        {
+          $mode = 'flexible_content_layout';
+          foreach ( $acf_field_value as $acf_sub_field_key => $acf_sub_field_value )
+          {
+            $sub_field_data = $this->_flatmap[ $acf_sub_field_key ];
+            $data_sub_field_value = $this->parse_block_acf_field_data( $acf_sub_field_key, $acf_sub_field_value, $_options );
+            $output[ $sub_field_data['name'] ] = $data_sub_field_value;
+          }
+        }
+      }
+    }
+
+    // Output was generated, so ensure it is the returned output
+    if ( $mode !== 'field' )
+    {
+      // Return as a collection
+      if ( $mode === 'collection' )
+      {
+        $return_output = $output;
+      }
+      // Return as an array with a named key
+      // @TODO test to see where this comes into play
+      else
+      {
+        $return_output = [
+          $field_data['name'] => $output,
+        ];
+      }
+    }
+    // Otherwise use the original value given
+    else
+    {
+      $return_output = $acf_field_value;
+    }
+
+    return $return_output;
   }
 
   /**
@@ -1005,7 +1125,10 @@ class Builder extends Entity {
       {
         $acf_layout_row_data = the_row();
         $block_name = get_row_layout();
-        $block_data = $this->parse_block_acf_layout_row_data( $acf_layout_row_data );
+        $block_data = $this->parse_block_acf_layout_row_data( $acf_layout_row_data, [
+          'builder' => $this->get_prop( 'name' ),
+          'layout' => $layout_name,
+        ] );
 
         if ( array_key_exists( $block_name, $blocks ) )
         {
@@ -1202,5 +1325,138 @@ class Builder extends Entity {
     ob_end_clean();
 
     return $rendered_template;
+  }
+
+  /**
+   * Setup the filters that the Page Builder can apply to
+   */
+  protected function setup_filters ()
+  {
+    add_filter( 'the_content', [ $this, 'filter_the_content' ], 10, 1 );
+    add_filter( 'the_content_feed', [ $this, 'filter_the_content_feed' ], 10, 2 );
+    add_filter( 'get_the_excerpt', [ $this, 'filter_get_the_excerpt' ], 10, 2 );
+    add_filter( 'the_excerpt_rss', [ $this, 'filter_the_excerpt_rss' ], 10, 1 );
+  }
+
+  /**
+   * Fetch the global post's content. If a post has Page Builder enabled, then this will bypass WordPress's
+   * `the_content` filter.
+   *
+   * There's a lot of issues with this approach. #1 is that because this filter doesn't specify the post of which to
+   * fetch the content (the `get_the_content` doesn't have a hookable filter either) it's possible someone could
+   * pass other information to apply the filter with that could be mistakenly overwritten by this one.
+   *
+   * Poor form, WordPress...
+   *
+   * @hook the_content
+   * @param $content
+   * @return string
+   */
+  public function filter_the_content ( $content = '' )
+  {
+    $post = get_post();
+
+    // Return the rendered layout content if Page Builder is enabled
+    if ( $this->is_enabled( $post ) )
+    {
+      // If post password required and it doesn't match the cookie.
+      if ( post_password_required( $post ) )
+      {
+        return get_the_password_form( $post );
+      }
+
+      return $this->render_layout( $post );
+    }
+    // Otherwise just return the regular content
+    else
+    {
+      return $content;
+    }
+  }
+
+  /**
+   * Get the content for displaying within a feed.
+   *
+   * Ideally this should get only the textual content of the rendered layout.
+   *
+   * @hook the_content_feed
+   * @param string $content
+   * @param string $feed_type
+   * @param int|string|\WP_Post
+   * @return string
+   */
+  public function filter_the_content_feed ( $content = '', $feed_type = '', $post = NULL )
+  {
+    $post = get_post( $post );
+
+    // Return the rendered layout content if Page Builder is enabled
+    if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
+    {
+      $rendered_layout = $this->render_layout( $post );
+      return strip_tags( $rendered_layout, '' );
+    }
+    // WordPress
+    else
+    {
+      return $content;
+    }
+  }
+
+  /**
+   * Fetch a (specified) post's excerpt. If a post has Page Builder enabled, then this will bypass WordPress's
+   * `get_the_excerpt` filter.
+   *
+   * Thankfully this one specifies a post from which to get the excerpt from...
+   *
+   * @hook the_excerpt
+   * @param string $excerpt
+   * @param int|\WP_Post $post
+   * @returns string
+   */
+  public function filter_get_the_excerpt ( $excerpt = '', $post = NULL )
+  {
+    $post = get_post( $post );
+
+    // If post password required and it doesn't match the cookie.
+    if ( post_password_required( $post ) )
+    {
+      return __( 'There is no excerpt because this is a protected post.' );
+    }
+
+    // Return the rendered layout content if Page Builder is enabled
+    if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
+    {
+      $rendered_layout = $this->render_layout( $post );
+      return strip_tags( $rendered_layout, '' );
+    }
+    // Return the WordPress default excerpt
+    else
+    {
+      return $excerpt;
+    }
+  }
+
+  /**
+   * Fetch the post's excerpt. If a post has Page Builder enabled, then this will bypass WordPress's
+   * `the_excerpt_rss` filter.
+   *
+   * @hook the_excerpt_rss
+   * @param string $excerpt
+   * @returns string
+   */
+  public function filter_the_excerpt_rss ( $excerpt = '', $post = NULL )
+  {
+    $post = get_post( $post );
+
+    // Return the rendered layout excerpt if Page Builder is enabled
+    if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
+    {
+      return $this->filter_get_the_excerpt( $excerpt, $post );
+    }
+    // Return the WordPress excerpt
+    else
+    {
+      return $excerpt;
+    }
   }
 }

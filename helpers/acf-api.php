@@ -5,6 +5,10 @@
 
 namespace LVL99\ACFPageBuilder;
 
+global $_acfpb_field_key_index;
+
+$_acfpb_field_key_index = [];
+
 /**
  * Generate an ACF group to hold ACF fields
  *
@@ -58,6 +62,8 @@ function generate_acf_group ( $acf_config, $options = [] )
  */
 function generate_acf_field ( $type, $acf_config, $options = [] )
 {
+  global $_acfpb_field_key_index;
+
   // Generic field stuff
   $_field = [
     'key' => uniqid(),
@@ -484,16 +490,38 @@ function generate_acf_field ( $type, $acf_config, $options = [] )
   // Load in the passed details
   $_field = array_merge( $_field, $acf_config );
 
-  // Ensure blocks (if required) are loaded and attached to the field's ACF config
-  if ( ! empty( $options ) && array_key_exists( 'blocks', $options ) )
-  {
-    $_field = load_blocks_into_acf_field( $type, $_field, $options );
-  }
-
   // Ensure sanitised key
   if ( array_key_exists( 'key', $_field ) )
   {
-    $_field['key'] = 'field_' . encode_key( $_field['key'] );
+    // @debug
+    $_field_key_before_encode = $_field['key'];
+    $_field_key_after_encode = 'field_' . encode_key( $_field['key'] );
+    $_field['key'] = $_field_key_after_encode;
+
+    // @debug
+    if ( array_key_exists( $_field['key'], $_acfpb_field_key_index ) )
+    {
+      if ( array_key_exists( 'overwrite_field', $options ) && ! empty( $options['overwrite_field'] ) )
+      {
+        $debug = 'ok to overwrite';
+        $_acfpb_field_key_index[ $_field['key'] ] = $_field_key_before_encode;
+      }
+      else
+      {
+        $debug = 'check why its not unique';
+      }
+    }
+    else
+    {
+      // @debug
+      $_acfpb_field_key_index[ $_field['key'] ] = $_field_key_before_encode;
+    }
+
+    // Ensure blocks (if required) are loaded and attached to the field's ACF config
+    if ( ! empty( $options ) && array_key_exists( 'blocks', $options ) )
+    {
+      $_field = load_blocks_into_acf_field( $type, $_field, $options );
+    }
   }
 
   return $_field;

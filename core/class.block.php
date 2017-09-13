@@ -45,27 +45,21 @@ class Block extends Entity {
    *
    * @var array
    */
-  public $content = [
-
-  ];
+  public $content = [];
 
   /**
    * The fields to further customise the block, or block's content
    *
    * @var array
    */
-  public $customise = [
-
-  ];
+  public $customise = [];
 
   /**
    * The fields to configure the block, or its content's, behaviour
    *
    * @var array
    */
-  public $configure = [
-
-  ];
+  public $configure = [];
 
   /**
    * The core configuration fields for the block (behaviour or the block's HTML element itself)
@@ -73,28 +67,25 @@ class Block extends Entity {
    * @var array
    * @protected
    */
-  protected $_configure = [
-    [
-      'label' => 'Element ID',
-      'name' => 'element_id',
-      'type' => 'text',
-      'instructions' => 'Set a specific ID for this block\'s element',
-    ],
-    [
-      'label' => 'Element Class',
-      'name' => 'element_class',
-      'type' => 'text',
-      'instructions' => 'Set additional CSS class names to this block\'s element',
-    ],
+  protected $_configure = [];
+
+  /**
+   * A map of all the fields assign to this block
+   *
+   * @var array
+   */
+  protected $_fields = [
+    'content' => [],
+    'customise' => [],
+    'configure' => [],
   ];
 
   /**
-   * The generated ACF config for the block's `sub_fields` (essentially a collection of all the fields listed above)
+   * The index of all the generated blocks managed by this class
    *
    * @var array
-   * @protected
    */
-  protected $acf_sub_fields = [];
+  protected $_index = [];
 
   /**
    * Class Block
@@ -110,42 +101,147 @@ class Block extends Entity {
   }
 
   /**
+   * Initialise the block's fields
+   *
+   * @param array $fields
+   */
+  public function initialise_fields( $fields = [] )
+  {
+    parent::initialise_fields( $fields );
+
+    // Core _configure fields which all blocks should have
+    $this->_configure = array_merge( $this->_configure, [
+      [
+        'label' => 'Element ID',
+        'name' => 'element_id',
+        'type' => 'text',
+        'instructions' => 'Set a specific ID for this block\'s element',
+      ],
+      [
+        'label' => 'Element Class',
+        'name' => 'element_class',
+        'type' => 'text',
+        'instructions' => 'Set additional CSS class names to this block\'s element',
+      ],
+      // @TODO may need to add more regarding responsive?
+    ] );
+  }
+
+  /**
+   * Go through and check if the field's key is registered in any of the instance's field groups
+   *
+   * @param string $field_key
+   * @return string|bool
+   */
+  public function get_field_group ( $field_key )
+  {
+    foreach ( $this->_fields as $field_group_name => $field_group_items )
+    {
+      $_field_group_items = array_flip( $field_group_items );
+      if ( array_key_exists( $field_key, $_field_group_items ) )
+      {
+        return $field_group_name;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Generate a field for use within this block
+   *
+   * @param string $field_group
+   * @param string $type
+   * @param array $acf_config
+   * @param array $options
+   * @returns array
+   */
+  protected function generate_field ( $field_group, $type, $acf_config, $options = [] )
+  {
+    $generated_sub_field = generate_acf_field( $type, $acf_config, $options );
+
+    $_options = wp_parse_args( $options, [
+      'overwrite_field' => '',
+    ] );
+
+    if ( ! empty( $_options['overwrite_field'] ) )
+    {
+      $debug = [
+        'old_key' => $_options['overwrite_field'],
+        'new_key' => $generated_sub_field['key'],
+      ];
+      $ok = 1;
+    }
+
+    // Attach this generated sub field to the block's _fields collection map only if it doesn't exist
+    if ( ! array_key_exists( $generated_sub_field['key'], array_flip( $this->_fields[ $field_group ] ) ) )
+    {
+      $num_fields = 0;
+      $debug = 'is_unique';
+    }
+    else
+    {
+      $num_fields = $this->_fields[ $field_group ][ $generated_sub_field['key'] ];
+      // @NOTE Check that a unique field has been generated!
+      $debug = 'not_unique';
+    }
+
+    $this->_fields[ $field_group ][ $generated_sub_field['key'] ] = $num_fields + 1;
+
+    return $generated_sub_field;
+  }
+
+  /**
    * Generate the code to use within ACF
    *
    * @param string $key
    * @param array $options
-   * @protected
    * @returns array
+   * @throws \Exception
    */
   public function generate_acf ( $key = '', $options = [] )
   {
     $_key = $this->get_key();
 
-    // If a namespace key was given, ensure it's at the start
+    // If a key was given, use it
     if ( ! empty( $key ) )
     {
-      $_key = $this->get_namespaced_key( $key );
+      $_key = $key;
     }
 
-    $_options = wp_parse_args( $options, [
-      'generate_key' => $_key,
-      'layout' => '',
-      'block' => $this->get_prop( 'name' ),
+    $_options = array_merge( $options, [
+      'generation_key' => $_key,
+      'block' => $this,
       // @NOTE Dunno if I should put `blocks` here
       // 'blocks' => $this->get_blocks(),
     ] );
 
+    if ( empty( $_options['layout'] ) )
+    {
+      throw new \Exception( 'LVL99 ACF Page Builder: options `layout` value cannot be empty' );
+    }
+
     // Generate all the fields for this block
     $_sub_fields = [];
+    $field_options = [
+      'generation_key' => $_key,
+      'builder' => $_options['builder'],
+      'layout' => $_options['layout'],
+      'block' => $_options['block']
+    ];
 
     // Process all the basic fields for this block
     if ( ! empty( $this->get_prop( 'content' ) ) )
     {
       foreach ( $this->get_prop( 'content' ) as $field )
       {
-        $_sub_fields[] = generate_acf_field( $field['type'], array_merge( $field, [
-          'key' => $_key . '_' . $field['name'],
-        ] ) );
+        $_field_options = array_merge( $field_options, [
+          'generation_key' => $_key . ':' . $field['name'],
+        ] );
+
+        $_sub_fields[] = $this->generate_field( 'content', $field['type'], array_merge( $field, [
+          'key' => $_field_options['generation_key'],
+        ] ), $_field_options );
       }
     }
 
@@ -159,9 +255,13 @@ class Block extends Entity {
 
       foreach ( $this->get_prop( 'customise' ) as $field )
       {
-        $_sub_fields[] = generate_acf_field( $field['type'], array_merge( $field, [
-          'key' => $_key . '_' . $field['name'],
-        ] ) );
+        $_field_options = array_merge( $field_options, [
+          'generation_key' => $_key . ':' . $field['name'],
+        ] );
+
+        $_sub_fields[] = $this->generate_field( 'customise', $field['type'], array_merge( $field, [
+          'key' => $_field_options['generation_key'],
+        ] ), $_field_options );
       }
     }
 
@@ -179,14 +279,15 @@ class Block extends Entity {
       // Process the fields
       foreach ( $_configure as $field )
       {
-        $_sub_fields[] = generate_acf_field( $field['type'], array_merge( $field, [
-          'key' => $_key . '_' . $field['name'],
-        ] ) );
+        $_field_options = array_merge( $field_options, [
+          'generation_key' => $_key . ':' . $field['name'],
+        ] );
+
+        $_sub_fields[] = $this->generate_field( 'configure', $field['type'], array_merge( $field, [
+          'key' => $_field_options['generation_key'],
+        ] ), $_field_options );
       }
     }
-
-    // Save the sub fields to the instance
-    $this->acf_sub_fields = $_sub_fields;
 
     // Generate the basic config for the block
     $_acf = generate_acf_page_builder_block( [
@@ -196,29 +297,9 @@ class Block extends Entity {
       'sub_fields' => $_sub_fields,
     ], $_options );
 
+    // Save a reference to the generated block's ACF key in this instance's index
+    $this->_index[] = $_acf['key'];
+
     return $_acf;
-  }
-
-  /**
-   * Register the block within the global builder's map
-   *
-   * @param array $acf
-   */
-  public function register_in_map ( $acf, $options = [] )
-  {
-    lvl99_acf_page_builder()->register_block_in_map( $this, $acf, $options );
-  }
-
-  /**
-   * Render the block for the post
-   *
-   * @param int|string|\WP_Post $post
-   * @param array $options
-   */
-  public function render ( $post = NULL, $options = [] )
-  {
-    lvl99_acf_page_builder()->render_block( $post, array_merge( $options, [
-      'block' => $this->get_prop( 'name' ),
-    ] ) );
   }
 }

@@ -84,26 +84,45 @@ class Entity {
 
     if ( ! empty( $_key ) && is_array( $_key ) )
     {
-      $_key = join( '_', $_key );
+      $_key = join( ':', $_key );
     }
 
     return sanitise_key( $_key );
   }
 
   /**
-   * Get a namespaced version of the key (namespace will be prepended to the entity's key)
+   * Get a version of the entity's key with the given key prepended
    *
    * @param string $key
    * @return string
    */
-  public function get_namespaced_key ( $key = '' )
+  public function get_prepended_key ( $key = '' )
   {
     $_key = $this->get_key();
 
-    // If a namespace key was given, ensure it's at the start
+    // If a key was given, ensure it's prepended
     if ( ! empty( $key ) )
     {
-      $_key = sanitise_key( $key ) . '_' . $_key;
+      $_key = sanitise_key( $key ) . ':' . $_key;
+    }
+
+    return $_key;
+  }
+
+  /**
+   * Get a version of the entity's key with the given key appended
+   *
+   * @param string $key
+   * @return string
+   */
+  public function get_appended_key ( $key = '' )
+  {
+    $_key = $this->get_key();
+
+    // If a key was given, ensure it's appended
+    if ( ! empty( $key ) )
+    {
+      $_key .= ':' . sanitise_key( $key );
     }
 
     return $_key;
@@ -139,7 +158,15 @@ class Entity {
       {
         $this->key = $key;
       } else {
-        $this->key = [ $key ];
+        // String has special delimiter
+        if ( strpos( $key, ':' ) > -1 )
+        {
+          $this->key = explode( ':', $key );
+        }
+        else
+        {
+          $this->key = [ $key ];
+        }
       }
 
     // Default to the entity's name
@@ -154,11 +181,16 @@ class Entity {
    * Register a block to use within the entity
    *
    * @param $block_name
-   * @param $block_instance
+   * @param array $options
+   * @return Block $block_instance
    */
-  public function register_block ( $block_name )
+  public function register_block ( $block_name, $options = [] )
   {
-    $this->_blocks[ $block_name ] = lvl99_acf_page_builder()->get_block_instance( $block_name );
+    $_options = wp_parse_args( $options, [
+      'builder' => lvl99_acf_page_builder(),
+    ]);
+
+    $this->_blocks[ $block_name ] = $_options['builder']->get_block_instance( $block_name );
   }
 
   /**
@@ -194,9 +226,14 @@ class Entity {
    * Initialise the blocks within the entity instance
    *
    * @param array $blocks A list of block names to initialise
+   * @param array $options
    */
-  public function initialise_blocks ( $blocks = [] )
+  public function initialise_blocks ( $blocks = [], $options = [] )
   {
+    $_options = wp_parse_args( $options, [
+      'builder' => lvl99_acf_page_builder(),
+    ]);
+
     // If no blocks given, check the entity for any blocks
     if ( empty( $blocks ) )
     {
@@ -206,7 +243,7 @@ class Entity {
     // If again no blocks specified, register all of the blocks within this entity
     if ( empty( $blocks ) )
     {
-      $blocks = array_keys( lvl99_acf_page_builder()->get_prop( 'loaded_blocks' ) );
+      $blocks = array_keys( $_options['builder']->get_prop( 'loaded_blocks' ) );
       $this->blocks = $blocks;
     }
 
@@ -223,12 +260,17 @@ class Entity {
   /**
    * Register a loaded layout to use within the entity
    *
-   * @param $layout_name
-   * @param $layout_instance
+   * @param string $layout_name
+   * @param array $options
+   * @param Layout $layout_instance
    */
-  public function register_layout ( $layout_name )
+  public function register_layout ( $layout_name, $options = [] )
   {
-    $this->_layouts[ $layout_name ] = lvl99_acf_page_builder()->get_layout_instance( $layout_name );
+    $_options = wp_parse_args( $options, [
+      'builder' => lvl99_acf_page_builder(),
+    ]);
+
+    $this->_layouts[ $layout_name ] = $_options['builder']->get_layout_instance( $layout_name );
   }
 
   /**
@@ -263,13 +305,19 @@ class Entity {
   /**
    * Initialise the layouts within the entity instance
    *
+   * @param array $layouts
+   * @param array $options
    */
-  public function initialise_layouts ( $layouts = [] )
+  public function initialise_layouts ( $layouts = [], $options = [] )
   {
+    $_options = wp_parse_args( $options, [
+      'builder' => lvl99_acf_page_builder(),
+    ]);
+
     // If no layouts given, register all of the layouts to use within this entity
     if ( empty( $layouts ) )
     {
-      $layouts = array_keys( lvl99_acf_page_builder()->get_prop( 'loaded_layouts' ) );
+      $layouts = array_keys( $_options['builder']->get_prop( 'loaded_layouts' ) );
       $this->layouts = $layouts;
     }
 

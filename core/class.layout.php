@@ -41,6 +41,13 @@ class Layout extends Entity {
   public $instructions = '';
 
   /**
+   * An index containing the keys for all the generated layouts using this class
+   *
+   * @var array
+   */
+  protected $_index = [];
+
+  /**
    * Class Layout
    *
    * @constructor
@@ -61,12 +68,17 @@ class Layout extends Entity {
    */
   public function generate_acf ( $key = '', $options = [] )
   {
-    $_key = $this->get_namespaced_key( $key );
+    $_key = $this->get_key();
+
+    // If a key was given, use it
+    if ( ! empty( $key ) )
+    {
+      $_key = $key;
+    }
 
     // Pass it along...
-    $_options = wp_parse_args( $options, [
-      'generate_key' => $key,
-      'generated_key' => $_key,
+    $_options = array_merge( $options, [
+      'generation_key' => $_key,
       'layout' => $this->get_prop( 'name' ),
       'blocks' => $this->get_blocks(),
     ] );
@@ -81,20 +93,9 @@ class Layout extends Entity {
       'button_label' => 'Add Block',
     ], $_options );
 
-    return $_acf;
-  }
+    // Save a reference to the generated layout's ACF key in this instance's index
+    $this->_index[] = $_acf['key'];
 
-  /**
-   * Render the layout
-   *
-   * @param int|string|\WP_Post $post
-   * @param array $options
-   * @returns mixed
-   */
-  public function render ( $post = NULL, $options = [] )
-  {
-    return lvl99_acf_page_builder()->render_layout( $post, array_merge( $options, [
-      'layout' => $this->get_prop( 'name' ),
-    ] ) );
+    return $_acf;
   }
 }

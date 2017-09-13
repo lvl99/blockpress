@@ -54,14 +54,14 @@ function sanitise_key ( $key )
 }
 
 /**
- * Encode a key into a reproduceable unique short code
+ * Encode a key into a reproduceable unique ID
  *
  * @param string $key
- * @return mixed
+ * @return string
  */
 function encode_key ( $key )
 {
-  return substr( sanitise_key( strrev( base64_encode( $key ) ) ), 0, 32 );
+  return substr( sanitise_key( md5( $key ) ), 0, 254 );
 }
 
 /**
@@ -71,6 +71,7 @@ function encode_key ( $key )
  * @param array $acf_config
  * @param array $options
  * @return mixed
+ * @throws \Exception
  */
 function load_blocks_into_acf_field ( $type, $acf_config, $options = [] )
 {
@@ -79,45 +80,55 @@ function load_blocks_into_acf_field ( $type, $acf_config, $options = [] )
   // Special stuff
   if ( ! empty( $options ) && in_array( $type, $allowed_types ) )
   {
-    // Get the layout instance
-    if ( array_key_exists( 'layout', $options ) && is_string( $options['layout'] ) && ! empty( $options['layout'] ) )
+    $_options = wp_parse_args( $options, [
+      'builder' => lvl99_acf_page_builder(),
+    ] );
+
+    // A layout must be specified
+    if ( ! array_key_exists( 'layout', $_options ) )
     {
-      $options['layout'] = lvl99_acf_page_builder()->get_layout_instance( $options['layout'] );
+      throw new \Exception( 'LVL99 ACF Page Builder: no layout was specified' );
     }
 
-    // Load in the layout blocks and generate ACF config for the layouts/sub_fields values
-    if ( array_key_exists( 'blocks', $options ) )
+    // Get the layout instance
+    if ( is_string( $_options['layout'] ) && ! empty( $_options['layout'] ) )
     {
-      $_blocks = $options['blocks'];
+      $_options['layout'] = $_options['builder']->get_layout_instance( $_options['layout'] );
+    }
+    // Error if empty
+    else if ( empty( $_options['layout'] ) )
+    {
+      throw new \Exception( 'LVL99 ACF Page Builder: no layout name was specified' );
+    }
+
+    // Get the block instance
+    // if ( array_key_exists( 'block', $_options ) && is_string( $_options['block'] ) && ! empty( $_options['block'] ) )
+    // {
+    //   $_options['block'] = $_options['builder']->get_block_instance( $_options['block'] );
+    // }
+
+    // Load in the layout blocks and generate ACF config for the layouts/sub_fields values
+    if ( array_key_exists( 'blocks', $_options ) )
+    {
+      $_blocks = $_options['blocks'];
       $_layout_blocks = [];
 
       foreach ( $_blocks as $block_name => $block_data )
       {
-        $_layout_block_key = ( ! empty( $acf_config['key'] ) ? $acf_config['key'] : ! empty( $acf_config['name'] ) ? $acf_config['name'] : $block_name );
-        $block_instance = NULL;
-        $generated_block = [];
+        $generate_options = [
+          'nested_key' => $_options['layout']->get_prop( 'name' ) . '_' . $acf_config['key'] . '_' . $block_name,
+          'parent' => $acf_config['key'],
+          'builder' => $_options['builder'],
+          'layout' => $_options['layout'],
+        ];
 
-        // Block instances already passed
-        if ( is_array( $block_data ) && array_key_exists( 'instance', $block_data ) )
+        if ( array_key_exists( 'block', $_options ) )
         {
-          $block_instance = $block_data['instance'];
-
-        // Fetch the block instance from the global builder
-        } else {
-          $block_instance = lvl99_acf_page_builder()->get_block_instance( $block_name );
+          $generate_options['block'] = $_options['block'];
         }
 
-        // Generate the block config and register into the builder's map
-        if ( $block_instance )
-        {
-          $generated_block = $block_instance->generate_acf( $_layout_block_key );
-          $register_options = array_merge( $options, [
-            // Ensure each nested block has a parent listed
-            'parent' => $acf_config['key'],
-          ] );
-          lvl99_acf_page_builder()->register_block_in_map( $block_instance, $generated_block, $register_options );
-          $_layout_blocks[] = $generated_block;
-        }
+        $generated_block = $_options['builder']->generate_block( $block_name, $_options['layout']->get_prop( 'name' ), $generate_options );
+        $_layout_blocks[] = $generated_block;
       }
 
       switch ( $type )

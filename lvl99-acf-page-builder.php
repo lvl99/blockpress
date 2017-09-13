@@ -48,7 +48,7 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
    * Configure the basic blocks to load
    * Basic blocks don't require any other block
    *
-   * @filter LVL99\ACFPageBuilder\Builder\load_blocks
+   * @hook LVL99\ACFPageBuilder\Builder\load_blocks
    * @param array $_load_blocks
    * @priority 10
    * @returns array
@@ -78,7 +78,7 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
    * Configure the special blocks to load
    * Special blocks do require other blocks to be loaded before they can load
    *
-   * @filter LVL99\ACFPageBuilder\Builder\load_blocks
+   * @hook LVL99\ACFPageBuilder\Builder\load_blocks
    * @param array $load_blocks
    * @priority 20
    * @returns array
@@ -87,6 +87,10 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
   {
     $_load_blocks = array_merge( $_load_blocks, [
       // Blocks which can reference other blocks should be loaded last
+      'column' => [
+        'class' => 'LVL99\\ACFPageBuilder\\BlockColumn',
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/core/blocks/class.block.column.php',
+      ],
       'columns' => [
         'class' => 'LVL99\\ACFPageBuilder\\BlockColumns',
         'path' => LVL99_ACF_PAGE_BUILDER_PATH . '/core/blocks/class.block.columns.php',
