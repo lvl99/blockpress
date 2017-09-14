@@ -95,4 +95,4 @@ for an invite.
 
 ## License
 
-[GPL 2.0+](LICENSE.md)
+[MIT](LICENSE.md)

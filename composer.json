@@ -3,7 +3,7 @@
   "description": "Define and build custom post/page layouts for your ACF-powered WordPress website",
   "homepage"   : "https://github.com/lvl99/acf-page-builder",
   "type": "wordpress-plugin",
-  "license": "GPL-2.0+",
+  "license": "MIT",
   "authors": [
     {
       "name": "Matt Scheurich",
