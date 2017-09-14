@@ -34,10 +34,10 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
   define( 'LVL99_ACF_PAGE_BUILDER_PATH', __DIR__ );
 
   // ACF Page Builder dependencies
-  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/helpers/general.php' );
-  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/helpers/acf-api.php' );
-  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/helpers/field-presets.php' );
-  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/helpers/special-sauce.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/inc/general.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/inc/acf-api.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/inc/field-presets.php' );
+  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/inc/special-sauce.php' );
   require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/core/class.entity.php' );
   require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/core/class.builder.php' );
   require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/core/class.block.php' );

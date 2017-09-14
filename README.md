@@ -67,11 +67,12 @@ Otherwise just download a ZIP from github: https://github.com/lvl99/acf-page-bui
       - [x] Ensure generated ACF configs have consistent reproduceable keys (i.e. not random)
 
 ### v0.2.0
-  - [ ] Figure out how to render layouts easily in templates
+  - [ ] Figure out how to render layouts easily in templates 
     - [x] Add in support for Twig rendering language, just coz I like it
     - [ ] Establish consistent array/object schema format for referring to a block's field values
   - [ ] Create filter for `the_content` which pulls in all the layout meta data to render
-  - [ ] Create filter for `the_excerpt` which pulls in all the layout meta data to render with HTML stripped out
+  - [ ] Create filter for `the_excerpt` which pulls in all the layout meta data to render with HTML stripped out 
+
 
 ### v0.3.0
   - [ ] Create/research REST JSON API to fuel a frontend editor app

@@ -70,23 +70,29 @@ class Layout extends Entity {
   {
     $_key = $this->get_key();
 
+    // Pass it along...
+    $_options = wp_parse_args( $options, [
+      'generation_key' => $_key,
+      'layout_slug' => $this->get_prop( 'name' ),
+    ] );
+
     // If a key was given, use it
     if ( ! empty( $key ) )
     {
       $_key = $key;
+      $_options['generation_key'] = $_key;
     }
 
-    // Pass it along...
-    $_options = array_merge( $options, [
-      'generation_key' => $_key,
-      'layout' => $this->get_prop( 'name' ),
-      'blocks' => $this->get_blocks(),
-    ] );
+    // Ensure the layout instance is loaded into the options
+    $_options['layout'] = $this;
+
+    // Ensure the blocks are loaded into the options
+    $_options['blocks'] = $this->get_blocks();
 
     // Build the ACF fields for the layout blocks
     $_acf = generate_acf_page_builder_layout( [
       'key' => $_key,
-      'name' => $this->get_prop( 'name' ),
+      'name' => $_options['layout_slug'],
       'label' => $this->get_prop( 'label' ),
       'instructions' => $this->get_prop( 'instructions' ),
       'layouts' => [],

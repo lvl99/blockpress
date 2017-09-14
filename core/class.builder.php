@@ -192,7 +192,9 @@ class Builder extends Entity {
       ] ),
 
       /**
-       * Enable the_content and the_excerpt filters to affect the display of the layouts
+       * Enable `the_content` and `the_excerpt` filters to affect the display of the layouts
+       *
+       * IMPORTANT: lots of plugins use `the_content` filter other than display the post's content. Use with caution...
        *
        * @hook LVL99\ACFPageBuilder\Builder\default_settings\use_render_hooks
        * @param bool
@@ -391,17 +393,21 @@ class Builder extends Entity {
 
     $generation_key = $this->get_appended_key( $_options['nested_key'] );
     $layout_instance = $this->get_layout_instance( $layout_name );
+    $layout_slug = 'acfpb_' . $this->get_key() . '_' . $layout_instance->get_prop( 'name' );
     $acf_layout = $layout_instance->generate_acf( $generation_key, [
       'builder' => $this,
+      // Make the layout slug incorporate the builder name
+      'layout_slug' => $layout_slug,
       'layout' => $layout_instance,
     ] );
 
     // Add this layout to the builder index
     $this->_index[ $acf_layout['key'] ] = [
       'generation_key' => $generation_key,
-      'key' => $acf_layout['key'],
+      'layout_slug' => $layout_slug,
       'layout' => $layout_instance,
       'builder' => $this,
+      'key' => $acf_layout['key'],
       'acf' => $acf_layout,
     ];
 
@@ -424,12 +430,14 @@ class Builder extends Entity {
 
     $generation_key = $this->get_appended_key( $_options['nested_key'] );
     $layout_instance = $this->get_layout_instance( $layout_name );
+    $layout_slug = 'acfpb_' . $this->get_key() . '_' . $layout_instance->get_prop( 'name' );
     $block_instance = $this->get_block_instance( $block_name );
 
     // Generate the ACF code
     $generate_acf_options = array_merge( $_options, [
       'generation_key' => $generation_key,
       'builder' => $this,
+      'layout_slug' => $layout_slug,
       'layout' => $layout_instance,
       'block' => $block_instance,
     ] );
@@ -439,13 +447,15 @@ class Builder extends Entity {
     // Create registration object for the generated block
     $register_block = [
       'generation_key' => $generation_key,
-      'key' => $acf_block['key'],
-      'block' => $block_instance,
-      'layout' => $layout_instance,
       'builder' => $this,
+      'layout_slug' => $layout_slug,
+      'layout' => $layout_instance,
+      'block' => $block_instance,
+      'key' => $acf_block['key'],
       'acf' => $acf_block,
       'map' => $this->map_block_data_acf( $block_instance, $acf_block, [
         'builder' => $this,
+        'layout_slug' => $layout_slug,
         'layout' => $layout_instance,
         'block' => $block_instance,
       ] ),
@@ -517,7 +527,7 @@ class Builder extends Entity {
     $acfpb_builder_select_choices = [];
     foreach ( $acfpb_builder_layouts as $index => $acfpb_layout )
     {
-      $acfpb_builder_select_choices[ 'acfpb_' . $key . '_layout_' . $acfpb_layout['name'] ] = $acfpb_layout['label'];
+      $acfpb_builder_select_choices[ $acfpb_layout['name'] ] = $acfpb_layout['label'];
     }
     $acfpb_builder_select_layout = generate_acf_field_select( [
       'key' => $key . ':layout',
@@ -549,7 +559,7 @@ class Builder extends Entity {
           [
             'field' => $acfpb_builder_select_layout['key'],
             'operator' => '==',
-            'value' => 'acfpb_' . $key . '_layout_' . $acfpb_layout['name'],
+            'value' => $acfpb_layout['name'],
           ],
         ],
       ];
@@ -853,6 +863,7 @@ class Builder extends Entity {
     $_options = wp_parse_args( $options, [
       'builder' => $this,
       'layout' => '',
+      'layout_slug' => '',
       'block' => $block_instance,
     ] );
 
@@ -890,6 +901,7 @@ class Builder extends Entity {
       'is_block' => TRUE,
       'builder' => $_options['builder'],
       'layout' => $_options['layout'],
+      'layout_slug' => $_options['layout_slug'],
       'block' => $_options['block'],
       'fields' => $fields,
     ];
@@ -958,12 +970,19 @@ class Builder extends Entity {
         $map_field['type'] = $acf_field['type'];
       }
 
+      // Add the layout slug
+      if ( array_key_exists( 'layout_slug', $options ) )
+      {
+        $map_field['layout_slug'] = $options['layout_slug'];
+      }
+
       // Has layouts defined within
       if ( array_key_exists( 'layouts', $acf_field ) )
       {
         $map_field['layouts'] = [];
         $layout_options = array_merge( $options, [
           'parent' => $acf_field['key'],
+          'layout_slug' => $options['layout_slug'],
         ] );
         foreach( $acf_field['layouts'] as $acf_layout_key => $acf_layout )
         {
@@ -976,6 +995,7 @@ class Builder extends Entity {
         $map_field['sub_fields'] = [];
         $sub_field_options = [
           'parent' => $map_field['key'],
+          'layout_slug' => $options['layout_slug'],
         ];
 
         // Let's add a type if none set but has sub-fields. We can assume (rightfully?) that this is then a flexible
@@ -1307,7 +1327,7 @@ class Builder extends Entity {
     $builder_layout_name = $this->get_active_layout( $post );
 
     // This is the name that we use to check for the layout's view
-    $layout_name = str_replace( 'acfpb_' . $this->get_key() . '_layout_', '', $builder_layout_name );
+    $layout_name = str_replace( 'acfpb_' . $this->get_key() . '_', '', $builder_layout_name );
 
     // We get the render data based on the builder's layout name
     $render_data = $this->get_render_data( $post, $builder_layout_name );
@@ -1318,18 +1338,18 @@ class Builder extends Entity {
     {
       $layout_data = [
         '_builder' => [
+          'builder' => $this->get_prop( 'name' ),
+          'post' => $post,
           'layout' => $layout_name,
+          'layout_slug' => $builder_layout_name,
           'debug' => [
-            'builder' => $this->get_prop( 'name' ),
             'version' => LVL99_ACF_PAGE_BUILDER,
             'path' => LVL99_ACF_PAGE_BUILDER_PATH,
-            'post' => $post,
-            'layout' => $layout_name,
             'view' => $layout_view_file,
             'options' => $options,
           ],
         ],
-        'data' => $render_data,
+        'blocks' => $render_data,
       ];
 
       // Render the twig view
@@ -1615,7 +1635,12 @@ class Builder extends Entity {
         return get_the_password_form( $post );
       }
 
-      return $this->render_layout( $post );
+      $content = $this->render_layout( $post );
+
+      // What is this strange line that they have in `the_content` ?
+      $content = str_replace( ']]>', ']]&gt;', $content );
+
+      return $content;
     }
     // Otherwise just return the regular content
     else
@@ -1642,8 +1667,9 @@ class Builder extends Entity {
     // Return the rendered layout content if Page Builder is enabled
     if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
     {
-      $rendered_layout = $this->render_layout( $post );
-      return strip_tags( $rendered_layout, '' );
+      $content = $this->render_layout( $post );
+      // $content = str_replace( ']]>', ']]&gt;', $content );
+      return strip_tags( $content, '' );
     }
     // WordPress
     else
@@ -1676,8 +1702,9 @@ class Builder extends Entity {
     // Return the rendered layout content if Page Builder is enabled
     if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
     {
-      $rendered_layout = $this->render_layout( $post );
-      return strip_tags( $rendered_layout, '' );
+      $excerpt = $this->render_layout( $post );
+      // $excerpt = str_replace( ']]>', ']]&gt;', $excerpt );
+      return strip_tags( $excerpt, '' );
     }
     // Return the WordPress default excerpt
     else
@@ -1701,7 +1728,9 @@ class Builder extends Entity {
     // Return the rendered layout excerpt if Page Builder is enabled
     if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
     {
-      return $this->filter_get_the_excerpt( $excerpt, $post );
+      $excerpt = $this->filter_get_the_excerpt( $excerpt, $post );
+      // $excerpt = str_replace( ']]>', ']]&gt;', $excerpt );
+      return $excerpt;
     }
     // Return the WordPress excerpt
     else

@@ -93,6 +93,7 @@ function load_blocks_into_acf_field ( $type, $acf_config, $options = [] )
     // Get the layout instance
     if ( is_string( $_options['layout'] ) && ! empty( $_options['layout'] ) )
     {
+      $_options['layout_name'] = $_options['layout'];
       $_options['layout'] = $_options['builder']->get_layout_instance( $_options['layout'] );
     }
     // Error if empty

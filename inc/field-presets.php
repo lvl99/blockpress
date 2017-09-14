@@ -29,6 +29,24 @@ function field_bg_image ()
   ];
 }
 
+function field_bg_repeat ()
+{
+  return [
+    'label' => 'Background repeat',
+    'name' => 'bg_repeat',
+    'type' => 'select',
+    'choices' => [
+      'no-repeat' => 'None',
+      'repeat-x' => 'Repeat only on X axis',
+      'repeat-y' => 'Repeat only on Y axis',
+      'repeat' => 'Repeat',
+    ],
+    'default_value' => [
+      'none'
+    ],
+  ];
+}
+
 function field_bg_size ()
 {
   return [
@@ -36,9 +54,12 @@ function field_bg_size ()
     'name' => 'bg_size',
     'type' => 'select',
     'choices' => [
-      'none' => 'None (default)',
-      'cover' => 'Cover whole slide with image',
-      'contain' => 'Contain whole image within slide',
+      'none' => 'None',
+      'cover' => 'Cover',
+      'contain' => 'Contain',
+    ],
+    'default_value' => [
+      'none'
     ],
   ];
 }

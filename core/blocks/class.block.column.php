@@ -24,11 +24,11 @@ class BlockColumn extends Block {
   public $content = [
     // This is actually a dummy field that will be replaced by the real field in the `generate_acf` method below
     [
-      'name' => 'column',
-      'label' => 'Column content',
+      'name' => 'blocks',
+      'label' => 'Blocks',
       'type' => 'flexible_content',
       'layout' => 'block',
-      'button_label' => 'Add Content',
+      'button_label' => 'Add Block',
       'sub_fields' => [],
     ],
   ];
