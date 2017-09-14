@@ -137,8 +137,7 @@ class Block extends Entity {
   {
     foreach ( $this->_fields as $field_group_name => $field_group_items )
     {
-      $_field_group_items = array_flip( $field_group_items );
-      if ( array_key_exists( $field_key, $_field_group_items ) )
+      if ( array_key_exists( $field_key, $field_group_items ) )
       {
         return $field_group_name;
       }
@@ -158,35 +157,26 @@ class Block extends Entity {
    */
   protected function generate_field ( $field_group, $type, $acf_config, $options = [] )
   {
+    $generation_key = $acf_config['key'];
     $generated_sub_field = generate_acf_field( $type, $acf_config, $options );
 
     $_options = wp_parse_args( $options, [
       'overwrite_field' => '',
     ] );
 
-    if ( ! empty( $_options['overwrite_field'] ) )
+    if ( $_options['overwrite_field'] === $generated_sub_field )
     {
       $debug = [
+        'generation_key' => $generation_key,
         'old_key' => $_options['overwrite_field'],
         'new_key' => $generated_sub_field['key'],
       ];
-      $ok = 1;
-    }
-
-    // Attach this generated sub field to the block's _fields collection map only if it doesn't exist
-    if ( ! array_key_exists( $generated_sub_field['key'], array_flip( $this->_fields[ $field_group ] ) ) )
-    {
-      $num_fields = 0;
-      $debug = 'is_unique';
+      $this->_fields[ $field_group ][ $generated_sub_field['key'] ] = $generation_key;
     }
     else
     {
-      $num_fields = $this->_fields[ $field_group ][ $generated_sub_field['key'] ];
-      // @NOTE Check that a unique field has been generated!
-      $debug = 'not_unique';
+      $this->_fields[ $field_group ][ $generated_sub_field['key'] ] = $generation_key;
     }
-
-    $this->_fields[ $field_group ][ $generated_sub_field['key'] ] = $num_fields + 1;
 
     return $generated_sub_field;
   }
