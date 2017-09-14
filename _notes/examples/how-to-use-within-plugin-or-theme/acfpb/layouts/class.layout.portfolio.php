@@ -68,7 +68,7 @@ class LayoutPortfolio extends ACFPageBuilder\Layout {
   // for pages/posts that may only need or require a few block types.
   //
   // If this is empty, then it will support all blocks that have been loaded into the Page Builder. Since the Page
-  // Builder generates the ACF configuration on the fly, it could be sensible to limit what blocks are supported for
+  // Builder generates the ACF configuration on the fly, it is sensible to limit what blocks are supported for
   // speed and optimisation's sake.
   //
   // In this example we're only going to allow our custom media block and a basic text block.
