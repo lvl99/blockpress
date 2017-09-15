@@ -8,3 +8,4 @@ Here I'm collecting notes for what I wish ACF did slightly differently.
     entity that wants to use it (it would make the configuration object smaller too).
   - I wish flexible content editing form in the backend would support tab layout fields.
   - I wish I could assign a value to display for a collapsed layout, much like one can with the repeater field
+  - I wish I could `get_field` using the field's key, not name.

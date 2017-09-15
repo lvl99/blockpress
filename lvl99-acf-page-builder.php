@@ -6,7 +6,7 @@ Description: Define and build custom post/page layouts for your ACF-powered Word
 Author: Matt Scheurich
 Author URI: http://lvl99.com/
 Text Domain: lvl99-acfpb
-Version: 0.1.0
+Version: 0.2.0
 */
 
 /**
@@ -22,6 +22,8 @@ Version: 0.1.0
  * - Render blocks in templates
  * - Much more to do...
  *
+ * If you have any input on how to do things better or just comments and suggestions for improvement and bug fixes,
+ * please don't hesitate to contribute via the github repo: https://github.com/lvl99/acf-page-builder
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

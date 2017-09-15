@@ -55,7 +55,7 @@ function load_acfpb_layouts ( $load_layouts )
     // The `path` points to the PHP file that contains the custom layout's class. This is for dynamic requiring of the
     // necessary layout files.
     //
-    'path' => trailingslashit( MY_COOL_THEME_PATH ) . 'acfpb/layouts/class.layout.portfolio.php',
+    'path' => MY_COOL_THEME_PATH . '/acfpb/layouts/class.layout.portfolio.php',
   ];
 
   return $load_layouts;
@@ -65,21 +65,28 @@ function load_acfpb_layouts ( $load_layouts )
 // Filters are essentially namespaced and describe the path of the function which fires the filter.
 // By default the filter runs at priority 10 and requires the $load_layouts array to be passed.
 //
-add_filter( 'LVL99\\ACFPageBuilder\\Builder\\load_layouts', __NAMESPACE__ . '\\load_acfpb_layouts', 11, 1 );
+add_filter( 'LVL99\ACFPageBuilder\Builder\load_layouts', __NAMESPACE__ . '\\load_acfpb_layouts', 11, 1 );
 
 //
 // Loading the custom blocks is practically the same as the custom layouts.
+//
+// If you have a custom block which relies on other blocks (core or custom) then you'll need to load them later. Use a
+// priority of 21 or more.
+//
+// In this example the media block is simple, so it can be loaded after the core blocks (priority 10 or more)
+//
+// There will definitely be changes to this API in the near future...
 //
 function load_acfpb_blocks ( $load_blocks )
 {
   $load_blocks['mct_media'] = [
     'class' => 'My_Cool_Theme\\BlockMedia',
-    'path' => trailingslashit( MY_COOL_THEME_PATH ) . 'acfpb/layouts/class.block.media.php',
+    'path' => MY_COOL_THEME_PATH . '/acfpb/layouts/class.block.media.php',
   ];
 
   return $load_blocks;
 }
-add_filter( 'LVL99\\ACFPageBuilder\\Builder\\load_blocks', __NAMESPACE__ . '\\load_acfpb_blocks', 11, 1 );
+add_filter( 'LVL99\ACFPageBuilder\Builder\load_blocks', __NAMESPACE__ . '\\load_acfpb_blocks', 11, 1 );
 
 //
 // That's it!

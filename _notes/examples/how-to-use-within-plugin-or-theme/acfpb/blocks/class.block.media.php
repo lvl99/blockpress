@@ -190,7 +190,7 @@ class BlockMedia extends ACFPageBuilder\Block {
   //
   // We need to reference this key every time we want to generate the ACF config.
   //
-  public function generate_acf ( $key = '' )
+  public function generate_acf ( $key = '', $options = [] )
   {
     //
     // We also don't want to overload the class's default `generate_acf` method, so ensure to call it first.
@@ -198,7 +198,7 @@ class BlockMedia extends ACFPageBuilder\Block {
     // Since we want to manipulate and transform the ACF configuration, it makes sense to save it to a variable to
     // then do some extra work on.
     //
-    $acf = parent::generate_acf( $key );
+    $acf = parent::generate_acf( $key, $options );
 
     //
     // Now we've generated the ACF configuration for this block, we can then fetch the field keys to affect the
@@ -206,10 +206,6 @@ class BlockMedia extends ACFPageBuilder\Block {
     //
     // Content, Customise and Configure fields are all combined into the `sub_fields` which is a zero-indexed array.
     // Therefore we need to reference the fields we want to manipulate by number.
-    //
-    // One minor gotcha at the moment is that the customise/configure groups each have a tab field added before them,
-    // so if you want to reference a field within one of those areas you might need to add 1/2 to the index (1 for
-    // customise and 2 for configure).
     //
     $select_field_key = $acf['sub_fields'][0]['key'];
 

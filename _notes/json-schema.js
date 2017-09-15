@@ -31,7 +31,7 @@ var exampleLayout = {
     // Could also be object containing the configs of each block
   ],
 
-  // @TODO potentially more... ?
+  // @TODO potentially more... and finish this...
 }
 
 var exampleBlock = {

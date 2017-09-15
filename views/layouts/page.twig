@@ -1,0 +1,19 @@
+{#
+ # Page Layout
+ #
+ # Views for layouts are completely optional. If there is no view for the layout then the Page Builder will just
+ # output the HTML for all the rendered blocks.
+ #
+ # Using a specific layout view means you can do extra stuff, like have a wrapper around all the blocks, or even
+ # load in different templates or even do something completely different with the block's data.
+ #}
+
+<div class="layout-page">
+  {% for block in blocks %}
+    {# Here's an example of how to render a layout's block within a layout by refering to the block's view file using
+       the `include` twig block. The twig loader supports relative and absolute file paths. If it's relative, then
+       it will use the default twig loader to find the corresponding twig file to load in #}
+    {% set block_view = block._builder.block ~ ".twig" %}
+    {% include block_view with block %}
+  {% endfor %}
+</div>

@@ -99,7 +99,7 @@ class Builder extends Entity {
   ];
 
   /**
-   * Twig environment for rendering templates
+   * Twig environment for loading twig templates
    */
   protected $_twig_env = NULL;
 
@@ -109,7 +109,12 @@ class Builder extends Entity {
   protected $_twig = NULL;
 
   /**
-   * Cached array of located view templates
+   * Collection of validated view directories (used by both Twig and PHP rendering)
+   */
+  protected $_view_dirs = [];
+
+  /**
+   * Cached array of located view files
    *
    * @var array
    * @private
@@ -232,6 +237,7 @@ class Builder extends Entity {
     $this->load_blocks();
     $this->load_layouts();
     $this->load_templates();
+    $this->load_view_folders();
     $this->settings['_loading'] = FALSE;
     $this->settings['_loaded'] = TRUE;
 
@@ -239,33 +245,7 @@ class Builder extends Entity {
     $this->settings['_initialising'] = TRUE;
     $this->initialise_blocks();
     $this->initialise_layouts();
-
-    // Load and initialise Twig
-    if ( $this->settings['twig'] )
-    {
-      // Load in Composer dependencies with Twig only if Twig isn't already loaded (WPML already loads in Twig)
-      if ( ! class_exists( '\\Twig_Environment' ) )
-      {
-        $autoloader = LVL99_ACF_PAGE_BUILDER_PATH . '/vendor/autoload.php';
-        if ( version_compare( PHP_VERSION, '5.3.0' ) < 0 ) {
-          $autoloader = LVL99_ACF_PAGE_BUILDER_PATH . '/vendor/autoload_52.php';
-        }
-        require_once $autoloader;
-      }
-
-      // Use the custom loader to be able to load from absolute paths
-      require_once LVL99_ACF_PAGE_BUILDER_PATH . '/core/twig/class.twig-template-loader.php';
-
-      // Instantiate Twig
-      $this->_twig_env = new TwigTemplateLoader();
-      $this->_twig = new \Twig_Environment( $this->_twig_env, $this->get_setting( 'twig_options' ) );
-
-      // Add in the debug stuff
-      if ( array_key_exists( 'debug', $this->get_setting( 'twig_options' ) ) && $this->get_setting( 'twig_options' )['debug'] )
-      {
-        $this->_twig->addExtension( new \Twig_Extension_Debug() );
-      }
-    }
+    $this->initialise_twig();
 
     // Generate the ACF config to set up the backend with
     $this->generate_acf();
@@ -376,6 +356,76 @@ class Builder extends Entity {
   protected function load_templates ()
   {
     // @TODO
+  }
+
+  /**
+   * Test the view folders to see which ones are valid to enable using in the Twig loader
+   *
+   * @protected
+   */
+  protected function load_view_folders ()
+  {
+    // Generate potential locations that views could exist in
+    $view_dirs = [
+      // @TODO might need to support child themes?
+      get_template_directory() . '/views/layouts',
+      get_template_directory() . '/views/blocks',
+      get_template_directory() . '/views',
+      get_template_directory(),
+      LVL99_ACF_PAGE_BUILDER_PATH . '/views/layouts',
+      LVL99_ACF_PAGE_BUILDER_PATH . '/views/blocks',
+      LVL99_ACF_PAGE_BUILDER_PATH . '/views',
+    ];
+
+    $valid_view_dirs = [];
+    foreach ( $view_dirs as $view_dir )
+    {
+      if ( file_exists( $view_dir ) )
+      {
+        $valid_view_dirs[] = $view_dir;
+      }
+    }
+
+    // Save the validated view folders into the instance
+    $this->_view_dirs = $valid_view_dirs;
+  }
+
+  /**
+   * Initialise Twig renderer and its loaders
+   */
+  protected function initialise_twig ()
+  {
+    // Load and initialise Twig (if not already initialised
+    if ( $this->settings['twig'] && empty( $this->_twig ) && empty( $this->_twig_env ) )
+    {
+      // Load in Composer dependencies with Twig only if Twig isn't already loaded (WPML already loads in Twig)
+      if ( ! class_exists( '\\Twig_Environment' ) )
+      {
+        $autoloader = LVL99_ACF_PAGE_BUILDER_PATH . '/vendor/autoload.php';
+        if ( version_compare( PHP_VERSION, '5.3.0' ) < 0 ) {
+          $autoloader = LVL99_ACF_PAGE_BUILDER_PATH . '/vendor/autoload_52.php';
+        }
+        require_once $autoloader;
+      }
+
+      // Use the custom loader to be able to load from absolute paths
+      require_once LVL99_ACF_PAGE_BUILDER_PATH . '/core/twig/class.twig-loader-abspath.php';
+
+      // Instantiate Twig loader and renderer
+      // -- Here's the regular Twig loader
+      $twig_filesystem_loader = new \Twig_Loader_Filesystem( $this->_view_dirs );
+      // -- Here's a custom Twig loader to refer to views using absolute paths
+      $twig_abspath_loader = new Twig_Loader_Abspath();
+      // -- And this loader chain means we use relative filesystem loader first, then absolute path loader last
+      $this->_twig_env = new \Twig_Loader_Chain([ $twig_filesystem_loader, $twig_abspath_loader ]);
+      $this->_twig = new \Twig_Environment( $this->_twig_env, $this->get_setting( 'twig_options' ) );
+
+      // Add in the debug stuff
+      if ( array_key_exists( 'debug', $this->get_setting( 'twig_options' ) ) && $this->get_setting( 'twig_options' )['debug'] )
+      {
+        $this->_twig->addExtension( new \Twig_Extension_Debug() );
+      }
+    }
   }
 
   /**
@@ -725,13 +775,7 @@ class Builder extends Entity {
     }
 
     // Generate potential locations that the view could exist in
-    $view_dirs = [
-      // @TODO might need to support child themes?
-      get_template_directory() . '/views/layouts',
-      get_template_directory() . '/views',
-      get_template_directory(),
-      LVL99_ACF_PAGE_BUILDER_PATH . '/views/layouts',
-    ];
+    $view_dirs = $this->_view_dirs;
     $view_filenames = [];
 
     // Reference twig filenames
@@ -755,9 +799,8 @@ class Builder extends Entity {
       }
     }
 
-    // Since layouts aren't so important, we don't need to throw an exception
-    // throw new \Exception( 'View file does not exist for layout "' . $layout_name . '"' );
-
+    // Since layouts aren't so important, we don't need to throw an exception, but we will throw a null to show that
+    // it wasn't found
     return NULL;
   }
 
@@ -787,23 +830,8 @@ class Builder extends Entity {
     }
 
     // Generate potential locations that the view could exist in
-    $view_dirs = [
-      // @TODO might need to support child themes?
-      get_template_directory() . '/views/blocks',
-      get_template_directory() . '/views',
-      get_template_directory(),
-      LVL99_ACF_PAGE_BUILDER_PATH . '/views/blocks',
-    ];
+    $view_dirs = $this->_view_dirs;
     $view_filenames = [];
-
-    // If layout name not empty, add in extra folder paths to check
-    if ( ! empty( $layout_name ) )
-    {
-      array_unshift( $view_dirs, get_template_directory() . '/views/' . $layout_name );
-      array_unshift( $view_dirs, get_template_directory() . '/views/' . $layout_name . '/blocks' );
-      array_unshift( $view_dirs, get_template_directory() . '/views/layouts/' . $layout_name );
-      array_unshift( $view_dirs, get_template_directory() . '/views/layouts/' . $layout_name . '/blocks' );
-    }
 
     // Reference twig filenames
     if ( $this->get_setting( 'twig' ) )
@@ -813,6 +841,7 @@ class Builder extends Entity {
     $view_filenames[] = $block_name . '.php';
 
     // Add extra filenames to check if the layout name was specified as well
+    // Supports if you want to have a different view for a block within a specific layout
     if ( ! empty( $layout_name ) )
     {
       // Reference twig filenames
@@ -899,11 +928,13 @@ class Builder extends Entity {
     // The mapped block
     $map_block = [
       'is_block' => TRUE,
+      'key' => $acf['key'],
+      'block' => $_options['block'],
+      'fields' => $fields,
+      'acf' => $acf,
       'builder' => $_options['builder'],
       'layout' => $_options['layout'],
       'layout_slug' => $_options['layout_slug'],
-      'block' => $_options['block'],
-      'fields' => $fields,
     ];
 
     // Ensure parent is loaded into mapped field data
@@ -935,6 +966,7 @@ class Builder extends Entity {
         'is_field' => TRUE,
         'key' => $acf_field['key'],
         'name' => $acf_field['name'],
+        'acf' => $acf_field,
       ];
 
       // Check if this is actually a block reference and if so ensure the block instance is linked
@@ -1236,6 +1268,7 @@ class Builder extends Entity {
     // Otherwise process it like a regular field
     else
     {
+      // Check if it is a special field which has an array value
       if ( is_array( $acf_field_value ) )
       {
         // Is a collection of fields (e.g. repeater, group)
@@ -1281,6 +1314,12 @@ class Builder extends Entity {
           }
         }
       }
+
+      // Some fields need some extra work done to have an array value, like fields with an array/object return_format
+      if ( $mode === 'field' && array_key_exists( 'post', $_options ) )
+      {
+        $return_output = check_acf_field_to_format_value( $acf_field_value, $field_data['acf'], $_options['post'] );
+      }
     }
 
     // Output was generated, so ensure it is the returned output
@@ -1291,8 +1330,7 @@ class Builder extends Entity {
       {
         $return_output = $output;
       }
-      // Return as an array with a named key
-      // @TODO test to see where this comes into play
+      // Return as an array with a named key for block fields
       else
       {
         $return_output = [

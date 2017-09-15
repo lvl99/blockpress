@@ -3,6 +3,7 @@
  #}
 
 <div {% if configure.element_id %} id="{{ configure.element_id }}" {% endif %} class="layout-block-columns row {{ configure.element_class }}">
+  <h1>Columns</h1>
   {% for column in content.columns %}
     <div {# {% if column.element_id %} id="{{ column.element_id }}" {% endif %} class="{{ column.element_class }}" #}>
       {{ dump(column) }}

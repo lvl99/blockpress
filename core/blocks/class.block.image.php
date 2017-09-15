@@ -21,6 +21,7 @@ class BlockImage extends Block {
       'name' => 'image',
       'label' => 'Image',
       'type' => 'image',
+      'return_format' => 'array',
     ],
   ];
 }

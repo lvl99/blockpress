@@ -1,6 +1,6 @@
 <?php
 /**
- * A Twig template loader I copied and pasted from Stackoverflow
+ * A Twig absolute path template loader I copied and pasted from Stackoverflow
  * @see https://stackoverflow.com/questions/7064914/how-to-load-a-template-from-full-path-in-the-template-engine-twig
  */
 
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
 }
 
-class TwigTemplateLoader implements \Twig_LoaderInterface
+class Twig_Loader_Abspath implements \Twig_LoaderInterface
 {
   protected $paths;
   protected $cache;

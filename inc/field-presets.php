@@ -26,6 +26,7 @@ function field_bg_image ()
     'label' => 'Background image',
     'name' => 'bg_image',
     'type' => 'image',
+    'return_format' => 'array',
   ];
 }
 
