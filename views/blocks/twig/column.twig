@@ -1,0 +1,12 @@
+{##
+ # Column Block
+ #}
+
+<div {% if configure.element_id %} id="{{ configure.element_id }}" {% endif %} class="layout-block-column {{ configure.element_class }}">
+  {% for block in content.blocks %}
+    {% if block._builder.block is not empty %}
+      {% set block_view = block._builder.block ~ ".twig" %}
+      {% include block_view with block %}
+    {% endif %}
+  {% endfor %}
+</div>

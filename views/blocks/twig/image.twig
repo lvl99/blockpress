@@ -4,9 +4,9 @@
 
 <figure {% if configure.element_id %} id="{{ configure.element_id }}" {% endif %} class="layout-block-image {{ configure.element_class }}">
   {% if data.content.image.srcset %}
-    <img src="{{ content.image.src }}" srcset="{{ content.image.srcset }}" alt="{{ content.image.title }}" />
+    <img src="{{ content.image.src }}" border="0" alt="{{ content.image.title }}">
   {% else %}
-    <img src="{{ content.image.src }}" alt="" />
+    <img src="{{ content.image.src }}" border="0" alt="">
   {% endif %}
   
   {% if content.image.caption %}
@@ -14,6 +14,4 @@
       {{ content.image.caption }}
     </figcaption>
   {% endif %}
-  
-  {{ dump() }}
 </figure>

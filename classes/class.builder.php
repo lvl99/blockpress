@@ -409,7 +409,7 @@ class Builder extends Entity {
       }
 
       // Use the custom loader to be able to load from absolute paths
-      require_once LVL99_ACF_PAGE_BUILDER_PATH . '/core/twig/class.twig-loader-abspath.php';
+      require_once LVL99_ACF_PAGE_BUILDER_PATH . '/classes/twig/class.twig-loader-abspath.php';
 
       // Instantiate Twig loader and renderer
       // -- Here's the regular Twig loader
@@ -662,6 +662,11 @@ class Builder extends Entity {
    */
   public function get_block_instance ( $block_name )
   {
+    if ( empty( $block_name ) || ! is_string( $block_name ) )
+    {
+      throw new \Exception( 'Invalid block name given' );
+    }
+
     if ( array_key_exists( $block_name, $this->loaded_blocks ) )
     {
       if ( array_key_exists( 'instance', $this->loaded_blocks[ $block_name ] ) )
@@ -688,7 +693,7 @@ class Builder extends Entity {
     // Default to all blocks if none specified
     if ( empty( $block_names ) )
     {
-      $block_names = array_keys( lvl99_acf_page_builder()->get_blocks() );
+      $block_names = array_keys( $this->get_blocks() );
     }
 
     // Get each named block instance
@@ -1315,10 +1320,10 @@ class Builder extends Entity {
         }
       }
 
-      // Some fields need some extra work done to have an array value, like fields with an array/object return_format
+      // Some fields need some extra work done to have proper typed value, like fields with an array/object return_format
       if ( $mode === 'field' && array_key_exists( 'post', $_options ) )
       {
-        $return_output = check_acf_field_to_format_value( $acf_field_value, $field_data['acf'], $_options['post'] );
+        $return_output = check_acf_field_to_format_value( $acf_field_key, $acf_field_value, $field_data['acf'], $_options['post'] );
       }
     }
 
@@ -1377,15 +1382,13 @@ class Builder extends Entity {
       $layout_data = [
         '_builder' => [
           'builder' => $this->get_prop( 'name' ),
+          'version' => LVL99_ACF_PAGE_BUILDER,
+          'path' => LVL99_ACF_PAGE_BUILDER_PATH,
           'post' => $post,
           'layout' => $layout_name,
           'layout_slug' => $builder_layout_name,
-          'debug' => [
-            'version' => LVL99_ACF_PAGE_BUILDER,
-            'path' => LVL99_ACF_PAGE_BUILDER_PATH,
-            'view' => $layout_view_file,
-            'options' => $options,
-          ],
+          'view' => $layout_view_file,
+          'options' => $options,
         ],
         'blocks' => $render_data,
       ];
@@ -1467,6 +1470,8 @@ class Builder extends Entity {
   /**
    * Render a post's block
    *
+   * @TODO revise this
+   *
    * @param int|string|\WP_Post $post
    * @param array $options
    * @returns string
@@ -1475,12 +1480,53 @@ class Builder extends Entity {
   public function render_block ( $post = NULL, $options = [] )
   {
     $post = get_post( $post );
-    $data = [];
     $block_view_file = '';
     $rendered_block = '';
+
+    // Get the layout/block name
     $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
     $layout_name = ( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
     $block_name = ( array_key_exists( 'block', $options ) ? $options['block'] : '' );
+
+    // Get the entry in the flatmap to populate layout/block info if key given
+    if ( ! empty( $key ) && array_key_exists( $key, $this->_flatmap ) )
+    {
+      $layout_name = $this->_flatmap[ $key ][ 'layout' ]->get_prop( 'name' );
+      $block_name = $this->_flatmap[ $key ][ 'block' ]->get_prop( 'name' );
+    }
+
+    // Update options to pass through
+    $options['post'] = $post;
+    $options['layout'] = $layout_name;
+    $options['block'] = $block_name;
+
+    try {
+      $block_view_file = $this->locate_block_view( $block_name, $layout_name );
+    }
+    catch (\Exception $e)
+    {
+      error_log( $e->getMessage() );
+      return '<!-- LVL99 ACF Page Builder - Missing view for block "' . $block_name . '" -->';
+    }
+
+    return $this->render_view( $block_view_file, $options );
+  }
+
+  /**
+   * Render the view
+   *
+   * @param string $view_file
+   * @param array $options
+   * @returns string
+   */
+  public function render_view ( $view_file, $options = [] )
+  {
+    $rendered_view = '';
+    $post = get_post( array_key_exists( 'post', $options ) ? $options['post'] : NULL );
+    $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
+    $layout_name = ( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
+    $block_name = ( array_key_exists( 'block', $options ) ? $options['block'] : '' );
+    $data = ( array_key_exists( 'data', $options ) ? $options['data'] : [] );
 
     // Get the entry in the flatmap to populate layout/block info
     if ( ! empty( $key ) && array_key_exists( $key, $this->_flatmap ) )
@@ -1489,76 +1535,51 @@ class Builder extends Entity {
       $block_name = $this->_flatmap[ $key ][ 'block' ]->get_prop( 'name' );
     }
 
-    // Data already given via the options
-    if ( array_key_exists( 'data', $options ) )
+    // Attach builder information to the render data
+    if ( ! array_key_exists( '_builder', $data ) )
     {
-      $data = $options['data'];
-    }
-    // Extract the block's data from the post
-    else
-    {
-      // @NOTE currently we can't get render data for a single block because blocks within flexible content layouts
-      //       don't have any kind of ID/key...
-      // $data = $this->get_render_data( $post, [
-      //   'key' => $key,
-      //   'layout' => $layout_name,
-      //   'block' => $block_name,
-      // ] );
-      throw new \Exception( 'LVL99 ACF Page Builder: no data specified to render the block with' );
+      $data['_builder'] = [];
     }
 
-    try {
-      $block_view_file = $this->locate_block_view( $block_name, $layout_name );
-    }
-    catch (\Exception $e)
-    {
-      error_log( $e->getMessage() );
-      $rendered_block = '<!-- LVL99 ACF Page Builder - Missing view for block "' . $block_name . '" -->';
-    }
-
-    // Attach generic information about the builder to the render data
+    // Overwrite _builder stuff with things related to this render pass
     $data['_builder'] = array_merge( $data['_builder'], [
-      'debug' => [
-        'builder' => $this->get_prop( 'name' ),
-        'version' => LVL99_ACF_PAGE_BUILDER,
-        'path' => LVL99_ACF_PAGE_BUILDER_PATH,
-        'post' => $post,
-        'layout' => $layout_name,
-        'block' => $block_name,
-        'view' => $block_view_file,
-        'options' => $options,
-      ],
+      'builder' => $this->get_prop( 'name' ),
+      'version' => LVL99_ACF_PAGE_BUILDER,
+      'path' => LVL99_ACF_PAGE_BUILDER_PATH,
+      'post' => $post,
+      'key' => $key,
+      'layout' => $layout_name,
+      'block' => $block_name,
+      'data' => $data,
+      'view' => $view_file,
+      'options' => $options,
     ] );
 
-    // A template was found
-    if ( ! empty( $block_view_file ) )
+    // Render Twig template
+    if ( preg_match( '/\.twig$/i', $view_file ) && $this->get_setting( 'twig' ) )
     {
-      // Render Twig template
-      if ( preg_match( '/\.twig$/i', $block_view_file ) && $this->get_setting( 'twig' ) )
-      {
-        $rendered_block = $this->render_twig_view( $block_view_file, $data );
-      }
-      // Render PHP template
-      else if ( preg_match( '/\/.php$/i', $block_view_file ) )
-      {
-        $rendered_block = $this->render_php_view( $block_view_file, $data );
-      }
-      // Just in case file can't be found...
-      else
-      {
-        $error_message = 'LVL99 ACF Page Builder - No view found for block "' . $block_name . '"';
-        error_log( $error_message );
-        $rendered_block = '<!-- ' . $error_message . ' -->';
-      }
+      $rendered_view = $this->render_twig_view( $view_file, $data );
+    }
+    // Render PHP template
+    else if ( preg_match( '/\.php$/i', $view_file ) )
+    {
+      $rendered_view = $this->render_php_view( $view_file, $data );
+    }
+    // Just in case file can't be found...
+    else
+    {
+      $error_message = 'LVL99 ACF Page Builder - No view found ';
+      error_log( $error_message );
+      $rendered_view = '<!-- ' . $error_message . ' -->';
     }
 
     // Echo the rendered template
     if ( array_key_exists( 'output', $options ) && $options['output'] === 'echo' )
     {
-      echo $rendered_block;
+      echo $rendered_view;
     }
 
-    return $rendered_block;
+    return $rendered_view;
   }
 
   /**
@@ -1574,7 +1595,7 @@ class Builder extends Entity {
     $rendered_view = '';
 
     // Twig is initialised and the file exists
-    if ( ! is_null( $this->_twig ) && file_exists( $file ) )
+    if ( $this->get_setting( 'twig' ) && ! is_null( $this->_twig ) && file_exists( $file ) )
     {
       $rendered_view = $this->_twig->render( $file, $data );
     }
@@ -1707,7 +1728,7 @@ class Builder extends Entity {
     {
       $content = $this->render_layout( $post );
       // $content = str_replace( ']]>', ']]&gt;', $content );
-      return strip_tags( $content, '' );
+      return clean_excess_whitespace( strip_tags( $content, '' ) );
     }
     // WordPress
     else
@@ -1742,7 +1763,7 @@ class Builder extends Entity {
     {
       $excerpt = $this->render_layout( $post );
       // $excerpt = str_replace( ']]>', ']]&gt;', $excerpt );
-      return strip_tags( $excerpt, '' );
+      return clean_excess_whitespace( strip_tags( $excerpt, '' ) );
     }
     // Return the WordPress default excerpt
     else

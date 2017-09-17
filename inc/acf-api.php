@@ -10,57 +10,6 @@ global $_acfpb_field_key_index;
 $_acfpb_field_key_index = [];
 
 /**
- * Get the post's field name from an ACF key.
- *
- * Kinda weird that ACF doesn't support this by default (or at least from what I've found so far)
- *
- * @param int|string|\WP_Post
- * @param string $key
- * @returns string
- */
-function get_post_acf_field_name_from_key ( $post = NULL, $key )
-{
-  global $wpdb;
-
-  $post = get_post( $post );
-  $acf_field_name = $wpdb->get_var( $wpdb->prepare( "SELECT meta_key FROM `$wpdb->postmeta` WHERE post_id = %d AND meta_value = %s LIMIT 1", $post->ID, $key ) );
-  if ( is_string( $acf_field_name ) )
-  {
-    return preg_replace( '/^_/', '', $acf_field_name );
-  }
-
-  return $acf_field_name;
-}
-
-/**
- * Checks the ACF config and determines if the field's value requires extra formatting
- *
- * @param mixed $field_value
- * @param array $acf
- * @param int|string|\WP_Post
- * @return mixed
- */
-function check_acf_field_to_format_value ( $field_value, $acf, $post = NULL )
-{
-  // Needs to return post objects or has special return format that value currently isn't
-  $requires_return_post_objects = array_key_exists( 'type', $acf ) && ( in_array( $acf['type'], [ 'post_object', 'page_link', 'relationship' ] ) );
-  $requires_special_return_format = array_key_exists( 'return_format', $acf ) && ( $acf['return_format'] === 'array' || $acf['return_format'] === 'object' );
-  if ( $requires_return_post_objects || $requires_special_return_format )
-  {
-    $acf_field_name = get_post_acf_field_name_from_key( $post, $acf['key'] );
-    $field_value = get_field( $acf_field_name, $post, TRUE );
-  }
-
-  // Turn true_false values into booleans
-  if ( $acf['type'] === 'true_false' )
-  {
-    $field_value = boolval( $field_value );
-  }
-
-  return $field_value;
-}
-
-/**
  * Generate an ACF group to hold ACF fields
  *
  * @param $acf_config

@@ -13,11 +13,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Block extends Entity {
   /**
-   * The name of the block
+   * The name of the block. This will be the block's slug in arrays and used when referring to the block in the
+   * views and templates.
    *
    * @var string
    */
   public $name = '';
+
+  /**
+   * The type of the block
+   *
+   * There are two types: a basic block and a special block.
+   *
+   * Special blocks can nest other blocks within them. Special blocks also need to be loaded after the blocks they
+   * nest. Very important (this API will probably be revised later).
+   *
+   * @var string
+   */
+  public $type = 'basic';
 
   /**
    * The display label of the block
@@ -121,7 +134,7 @@ class Block extends Entity {
         'label' => 'Element Class',
         'name' => 'element_class',
         'type' => 'text',
-        'instructions' => 'Set additional CSS class names to this block\'s element',
+        'instructions' => 'Set additional CSS class names for this block\'s element',
       ],
       // @TODO may need to add more regarding responsive?
     ] );

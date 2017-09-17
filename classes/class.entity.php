@@ -252,7 +252,22 @@ class Entity {
     {
       foreach ( $blocks as $block_name )
       {
-        $this->register_block( $block_name );
+        // If $pecial $auce is found, load in the blocks which match the selector
+        if ( preg_match( '/^\$\$\:?/', $block_name ) )
+        {
+          $filters = str_replace( '$$:', '', $block_name );
+          $filtered_blocks = filter_blocks( $_options['builder']->get_blocks(), $filters );
+
+          // Register all the filtered blocks
+          foreach ( $filtered_blocks as $filtered_block_name => $filtered_block_instance )
+          {
+            $this->register_block( $filtered_block_name );
+          }
+        }
+        else
+        {
+          $this->register_block( $block_name );
+        }
       }
     }
   }
