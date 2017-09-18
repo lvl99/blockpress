@@ -21,7 +21,7 @@ class BlockColumn extends Block {
   // By default any `flexible_content` field will support all layouts defined in the Page Builder
   // Blocks which nest other blocks should be marked as the "special" type
   public $type = 'special';
-  public $blocks = [ '$$:type=basic' ]; // See `special-sauce.php:filter_blocks`
+  public $blocks = [ '$$:__not=column,columns' ]; // See `special-sauce.php:filter_blocks`
 
   public $content = [
     // This is actually a dummy field that will be replaced by the real field in the `generate_acf` method below

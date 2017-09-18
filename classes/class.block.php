@@ -109,6 +109,13 @@ class Block extends Entity {
   public function __construct ( $key = '' )
   {
     $this->set_key( $key );
+  }
+
+  /**
+   * Initialise any nested blocks and the block's fields
+   */
+  public function initialise ()
+  {
     $this->initialise_blocks();
     $this->initialise_fields( [ 'content', 'customise', 'configure', '_configure' ] );
   }

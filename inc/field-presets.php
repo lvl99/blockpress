@@ -37,13 +37,13 @@ function field_bg_repeat ()
     'name' => 'bg_repeat',
     'type' => 'select',
     'choices' => [
-      'no-repeat' => 'None',
-      'repeat-x' => 'Repeat only on X axis',
-      'repeat-y' => 'Repeat only on Y axis',
-      'repeat' => 'Repeat',
+      'no-repeat' => 'No repeat',
+      'repeat-x' => 'Repeat only X axis',
+      'repeat-y' => 'Repeat only Y axis',
+      'repeat' => 'Repeat X and Y axes',
     ],
     'default_value' => [
-      'none'
+      'no-repeat'
     ],
   ];
 }

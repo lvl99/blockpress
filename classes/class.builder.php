@@ -286,25 +286,24 @@ class Builder extends Entity {
     {
       if ( file_exists( $block_data['path'] ) )
       {
-        try
-        {
-          require_once( $block_data['path'] );
+        require_once( $block_data['path'] );
 
-          // Create the single block instance which is reused
-          $_loaded_block = $block_data;
-          $_loaded_block_class = $block_data['class'];
-          $_loaded_block['instance'] = new $_loaded_block_class( $this->get_appended_key( $block_name ) );
+        // Create the single block instance which is reused
+        $_loaded_block = $block_data;
+        $_loaded_block_class = $block_data['class'];
+        $_loaded_block['instance'] = new $_loaded_block_class( $this->get_appended_key( $block_name ) );
 
-          // Save loaded block into Builder
-          $this->loaded_blocks[ $block_name ] = $_loaded_block;
-          $this->blocks[] = $block_name;
-          $this->_blocks[ $block_name ] = $_loaded_block;
-        }
-        catch ( \Exception $e )
-        {
-          error_log( 'Failed to load Page Builder block: "' . $block_name . '" with path: "' . $block_data['path'] . '"' );
-        }
+        // Save loaded block into Builder
+        $this->loaded_blocks[ $block_name ] = $_loaded_block;
+        $this->blocks[] = $block_name;
+        $this->_blocks[ $block_name ] = $_loaded_block;
       }
+    }
+
+    // After loaded and created all the block instances we can initialise them
+    foreach ( $this->loaded_blocks as $block_name => $block_data )
+    {
+      $block_data['instance']->initialise();
     }
   }
 
@@ -327,24 +326,23 @@ class Builder extends Entity {
 
     foreach ( $_load_layouts as $layout_name => $layout_data )
     {
-      try
-      {
-        require_once( $layout_data['path'] );
+      require_once( $layout_data['path'] );
 
-        // Create a single layout instance which is reused
-        $_loaded_layout = $layout_data;
-        $_loaded_layout_class = $layout_data['class'];
-        $_loaded_layout['instance'] = new $_loaded_layout_class( $this->get_appended_key( $layout_name ) );
+      // Create a single layout instance which is reused
+      $_loaded_layout = $layout_data;
+      $_loaded_layout_class = $layout_data['class'];
+      $_loaded_layout['instance'] = new $_loaded_layout_class( $this->get_appended_key( $layout_name ) );
 
-        // Save loaded layout into Builder
-        $this->loaded_layouts[ $layout_name ] = $_loaded_layout;
-        $this->layouts[] = $layout_name;
-        $this->_layouts[ $layout_name ] = $_loaded_layout;
-      }
-      catch ( \Exception $e )
-      {
-        error_log( 'Failed to load Page Builder layout: "' . $layout_name . '" with path: "' . $layout_data['path'] . '"' );
-      }
+      // Save loaded layout into Builder
+      $this->loaded_layouts[ $layout_name ] = $_loaded_layout;
+      $this->layouts[] = $layout_name;
+      $this->_layouts[ $layout_name ] = $_loaded_layout;
+    }
+
+    // After loaded and created all the layout instances we can initialise them
+    foreach ( $this->loaded_layouts as $layout_name => $layout_data )
+    {
+      $layout_data['instance']->initialise();
     }
   }
 

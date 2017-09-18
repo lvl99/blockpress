@@ -56,6 +56,13 @@ class Layout extends Entity {
   public function __construct ( $key = '' )
   {
     $this->set_key( $key );
+  }
+
+  /**
+   * Initialise the layout with any nested blocks
+   */
+  public function initialise ()
+  {
     $this->initialise_blocks();
   }
 

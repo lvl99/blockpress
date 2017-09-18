@@ -55,10 +55,49 @@ function filter_blocks ( $blocks, $filters )
 
     foreach ( $filters as $filter_name => $filter_value )
     {
-      if ( $block_instance->get_prop( $filter_name ) === $filter_value )
+      // Filter by a block property value
+      if ( property_exists( $block_instance, $filter_name ) )
       {
-        $output[ $block_name ] = $block_instance;
-        break;
+        if ( $block_instance->get_prop( $filter_name ) === $filter_value )
+        {
+          $output[ $block_name ] = $block_instance;
+          break;
+        }
+      }
+      else
+      {
+        $include_block = TRUE;
+
+        // Special rules to filter by
+        switch ( strtolower( $filter_name ) )
+        {
+          case '__exclude':
+          case '__not':
+            // Exclude by name
+            if ( is_string( $filter_value ) )
+            {
+              if ( strpos( $filter_value, ',' ) >= 0 )
+              {
+                $filter_value = explode( ',', $filter_value );
+              }
+              else
+              {
+                $filter_value = [ $filter_value ];
+              }
+            }
+
+            // Exclude the block
+            if ( in_array( $block_name, $filter_value ) )
+            {
+              $include_block = FALSE;
+            }
+            break;
+        }
+
+        if ( $include_block )
+        {
+          $output[ $block_name ] = $block_instance;
+        }
       }
     }
   }
