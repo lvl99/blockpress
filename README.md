@@ -73,7 +73,6 @@ Otherwise just download a ZIP from github: https://github.com/lvl99/acf-page-bui
   - [x] Create filter for `the_content` which pulls in all the layout meta data to render
   - [x] Create filter for `the_excerpt` which pulls in all the layout meta data to render with HTML stripped out 
 
-
 ### v0.3.0
   - [ ] Create/research REST JSON API to fuel a frontend editor app
   

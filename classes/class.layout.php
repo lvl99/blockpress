@@ -41,6 +41,13 @@ class Layout extends Entity {
   public $instructions = '';
 
   /**
+   * Extra fields for this layout
+   *
+   * @var array
+   */
+  public $fields = [];
+
+  /**
    * An index containing the keys for all the generated layouts using this class
    *
    * @var array
@@ -64,6 +71,7 @@ class Layout extends Entity {
   public function initialise ()
   {
     $this->initialise_blocks();
+    // $this->initialise_fields( [ 'fields' ] );
   }
 
   /**
@@ -97,7 +105,7 @@ class Layout extends Entity {
     $_options['blocks'] = $this->get_blocks();
 
     // Build the ACF fields for the layout blocks
-    $_acf = generate_acf_page_builder_layout( [
+    $acf_layout = generate_acf_page_builder_layout( [
       'key' => $_key,
       'name' => $_options['layout_slug'],
       'label' => $this->get_prop( 'label' ),
@@ -106,9 +114,22 @@ class Layout extends Entity {
       'button_label' => 'Add Block',
     ], $_options );
 
-    // Save a reference to the generated layout's ACF key in this instance's index
-    $this->_index[] = $_acf['key'];
+    // @TODO support extra fields for layouts
+    // Generate the extra fields for this layout
+    // $acf_fields = [];
+    // foreach ( $this->fields as $field )
+    // {
+    //   $acf_fields[] = $this->generate_field( NULL, $field['type'], array_merge( $field, [
+    //     'key' => $_key . ':' . $field['name'],
+    //   ] ), [
+    //     'layout_name' => $_options['layout_slug'],
+    //     'layout' => $this,
+    //   ] );
+    // }
 
-    return $_acf;
+    // Save a reference to the generated layout's ACF key in this instance's index
+    $this->_index[] = $acf_layout['key'];
+
+    return $acf_layout;
   }
 }

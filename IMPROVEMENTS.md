@@ -13,3 +13,4 @@ A list of things that I need to refactor/improve:
   - Rendering blocks/layouts has been a bit piecemeal -- will need serious refactor
   - I used this `$options` object as a way to pass through common data shared between various functions in classes and
     outside, but it's getting confusing. There must be a better way...
+  - You know, I've just realised that layouts are just exactly like blocks -- they should support extra fields too!

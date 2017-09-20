@@ -57,6 +57,21 @@ class Entity {
   protected $_layouts = [];
 
   /**
+   * A list of the fields this entity displays
+   *
+   * @var array
+   */
+  public $fields = [];
+
+  /**
+   * An internal collection of the registered fields for this entity
+   *
+   * @var array
+   * @protected
+   */
+  protected $_fields = [];
+
+  /**
    * Get a property on the entity
    *
    * @param string $prop_name
@@ -371,5 +386,52 @@ class Entity {
         }
       }
     }
+  }
+
+  /**
+   * Generate a field for use within this entity
+   *
+   * @param null|string $field_group
+   * @param string $type
+   * @param array $acf_config
+   * @param array $options
+   * @returns array
+   */
+  protected function generate_field ( $field_group = NULL, $type, $acf_config, $options = [] )
+  {
+    $generation_key = $acf_config['key'];
+    $generated_sub_field = generate_acf_field( $type, $acf_config, $options );
+
+    $_options = wp_parse_args( $options, [
+      'overwrite_field' => '',
+    ] );
+
+    // @TODO check that a field hasn't already been defined?
+    if ( $_options['overwrite_field'] === $generated_sub_field )
+    {
+      $debug = [
+        'generation_key' => $generation_key,
+        'old_key' => $_options['overwrite_field'],
+        'new_key' => $generated_sub_field['key'],
+      ];
+    }
+
+    // Add the generated field to the entity's fields
+    if ( ! empty( $field_group ) )
+    {
+      // Make sure the field group exists
+      if ( ! isset( $this->_fields[ $field_group ] ) )
+      {
+        $this->_fields[ $field_group ] = [];
+      }
+
+      $this->_fields[ $field_group ][ $generated_sub_field['key'] ] = $generation_key;
+    }
+    else
+    {
+      $this->_fields[ $generated_sub_field['key'] ] = $generation_key;
+    }
+
+    return $generated_sub_field;
   }
 }

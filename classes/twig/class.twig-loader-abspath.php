@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
 }
 
-class Twig_Loader_Abspath implements \Twig_LoaderInterface
+class Twig_Loader_Abspath implements \Twig_LoaderInterface, \Twig_ExistsLoaderInterface, \Twig_SourceContextLoaderInterface
 {
   protected $paths;
   protected $cache;
@@ -48,5 +48,13 @@ class Twig_Loader_Abspath implements \Twig_LoaderInterface
     else {
       throw new \Twig_Error_Loader(sprintf('Unable to find template "%s".', $path));
     }
+  }
+
+  public function getSourceContext($name) {
+
+  }
+
+  public function exists($name) {
+
   }
 }

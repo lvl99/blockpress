@@ -230,7 +230,7 @@ function check_acf_field_to_format_value ( $acf_field_key, $acf_field_value, $ac
       case 'page_link':
       case 'relationship':
         // These fields support multiple values, i.e. return an array of objects
-        if ( $acf['multiple'] && is_array( $acf_field_value ) )
+        if ( is_array( $acf_field_value ) )
         {
           $multiple_values = [];
           foreach ( $acf_field_value as $item_id )
@@ -272,9 +272,8 @@ function check_acf_field_to_format_value ( $acf_field_key, $acf_field_value, $ac
   {
     $acf_field_value = boolval( $acf_field_value );
   }
-
   // Ensure number
-  if ( $acf['type'] === 'number' )
+  else if ( $acf['type'] === 'number' )
   {
     $acf_field_value = floatval( $acf_field_value );
   }
@@ -286,6 +285,7 @@ function check_acf_field_to_format_value ( $acf_field_key, $acf_field_value, $ac
  * Clean any excess whitespace detected within. Essentially folds all whitespace down to a single space
  *
  * @param string $input
+ * @returns string
  */
 function clean_excess_whitespace ( $input )
 {

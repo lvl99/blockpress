@@ -10,12 +10,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class Template extends Entity {
+  public $layout = '';
   public $blocks = [];
+  public $data = [];
 
-  public $layouts = [];
-
-  public function __constructor ( $options = [] )
+  public function __constructor ( $key = '', $options = [] )
   {
-
+    // @TODO
   }
 }

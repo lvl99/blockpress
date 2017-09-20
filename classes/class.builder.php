@@ -148,6 +148,7 @@ class Builder extends Entity {
    */
   public function initialise ( $options = [] )
   {
+    // @TODO refactor to WP Options API
     $this->settings = wp_parse_args( $options, [
       /**
        * The supported post types that can show the Page Builder in the backend
@@ -363,18 +364,32 @@ class Builder extends Entity {
    */
   protected function load_view_folders ()
   {
-    // Generate potential locations that views could exist in
-    $view_dirs = [
+    /**
+     * The potential locations that views could exist in
+     *
+     * @hook LVL99\ACFPageBuilder\Builder\load_view_folders
+     * @param array $view_dirs
+     * @returns array
+     */
+    $view_dirs = apply_filters( 'LVL99\ACFPageBuilder\Builder\load_view_folders', [
       // @TODO might need to support child themes?
       get_template_directory() . '/views/layouts',
       get_template_directory() . '/views/blocks',
       get_template_directory() . '/views',
-      get_template_directory(),
-      LVL99_ACF_PAGE_BUILDER_PATH . '/views/layouts',
-      LVL99_ACF_PAGE_BUILDER_PATH . '/views/blocks',
-      LVL99_ACF_PAGE_BUILDER_PATH . '/views',
-    ];
+    ] );
 
+    // Sanitise user return value
+    if ( ! is_array( $view_dirs ) )
+    {
+      $view_dirs = [];
+    }
+
+    // Always add plugin's folders to fall back on
+    $view_dirs[] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/layouts';
+    $view_dirs[] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/blocks';
+    $view_dirs[] = LVL99_ACF_PAGE_BUILDER_PATH . '/views';
+
+    // Check that the paths are valid and exist
     $valid_view_dirs = [];
     foreach ( $view_dirs as $view_dir )
     {
@@ -410,10 +425,13 @@ class Builder extends Entity {
       require_once LVL99_ACF_PAGE_BUILDER_PATH . '/classes/twig/class.twig-loader-abspath.php';
 
       // Instantiate Twig loader and renderer
-      // -- Here's the regular Twig loader
+      // -- Here's the regular Twig loader which is relative to the filesystem (will check through all the validated
+      //    view folders to find a view that matches)
       $twig_filesystem_loader = new \Twig_Loader_Filesystem( $this->_view_dirs );
+
       // -- Here's a custom Twig loader to refer to views using absolute paths
       $twig_abspath_loader = new Twig_Loader_Abspath();
+
       // -- And this loader chain means we use relative filesystem loader first, then absolute path loader last
       $this->_twig_env = new \Twig_Loader_Chain([ $twig_filesystem_loader, $twig_abspath_loader ]);
       $this->_twig = new \Twig_Environment( $this->_twig_env, $this->get_setting( 'twig_options' ) );
@@ -736,8 +754,9 @@ class Builder extends Entity {
    * @param int|string|\WP_Post $post
    * @returns bool
    */
-  public function is_enabled ( $post )
+  public function is_enabled ( $post = NULL )
   {
+    $post = get_post( $post );
     $key = $this->get_key();
     $is_enabled = get_field( 'acfpb_' . $key . '_enabled', $post );
     return $is_enabled;
@@ -1141,12 +1160,14 @@ class Builder extends Entity {
       while ( have_rows( $layout_name, $post ) )
       {
         $acf_layout_row_data = the_row();
+        $index = get_row_index();
         $block_name = get_row_layout();
         $block_data = $this->parse_block_acf_layout_row_data( $acf_layout_row_data, [
           'post' => $post,
           'builder' => $this->get_prop( 'name' ),
           'layout' => $layout_name,
           'block' => $block_name,
+          'index' => $index,
         ] );
 
         // Add the block data to the layout's render data
@@ -1176,6 +1197,7 @@ class Builder extends Entity {
       'builder' => $this->get_prop( 'name' ),
       'layout' => '',
       'block' => '',
+      'index' => 0,
     ] );
 
     // Test if its a registered Builder block
@@ -1246,6 +1268,7 @@ class Builder extends Entity {
       'builder' => $this->get_prop( 'name' ),
       'layout' => '',
       'block' => '',
+      'index' => 0,
     ] );
 
     // Not a registered Builder block/field, so carry on...
@@ -1257,7 +1280,7 @@ class Builder extends Entity {
     // Get the registered block's field information
     $field_data = $this->_flatmap[ $acf_field_key ];
 
-    // Check if this is a Builder block
+    // Check if this is a Builder block first
     if ( is_array( $acf_field_value ) && array_key_exists( 'acf_fc_layout', $acf_field_value ) && array_key_exists( $acf_field_value['acf_fc_layout'], $this->loaded_blocks() ) )
     {
       $mode = 'block';
@@ -1265,6 +1288,7 @@ class Builder extends Entity {
         'builder' => $_options['builder'],
         'layout' => $_options['layout'],
         'block' => $acf_field_value['acf_fc_layout'],
+        'index' => $_options['index'],
       ] );
 
     }
@@ -1281,15 +1305,20 @@ class Builder extends Entity {
           $data_collection = [];
           foreach ( $acf_field_value as $collection_index => $collection_value )
           {
+            $nested_index = 0;
             foreach ( $collection_value as $collection_field_key => $collection_field_value )
             {
-              $data_collection_item = $this->parse_block_acf_field_data( $collection_field_key, $collection_field_value, $_options );
+              $data_collection_item = $this->parse_block_acf_field_data( $collection_field_key, $collection_field_value, array_merge( $_options, [
+                'index' => $nested_index,
+              ] ) );
 
               // Might be null
               if ( ! is_null( $data_collection_item ) )
               {
                 $data_collection[] = $data_collection_item;
               }
+
+              $nested_index++;
             }
           }
 
@@ -1299,9 +1328,14 @@ class Builder extends Entity {
         else if ( $field_data['type'] === 'flexible_content' )
         {
           $mode = 'collection';
+          $nested_index = 0;
           foreach ( $acf_field_value as $layout_row_key => $layout_row_value )
           {
-            $output[] = $this->parse_block_acf_layout_row_data( $layout_row_value, $_options );
+            $output[] = $this->parse_block_acf_layout_row_data( $layout_row_value, array_merge( $_options, [
+              'index' => $nested_index,
+            ] ) );
+
+            $nested_index++;
           }
 
         }
@@ -1309,11 +1343,17 @@ class Builder extends Entity {
         else if ( $field_data['type'] === 'flexible_content_layout' || array_key_exists( 'sub_fields', $field_data ) )
         {
           $mode = 'flexible_content_layout';
+          $nested_index = 0;
           foreach ( $acf_field_value as $acf_sub_field_key => $acf_sub_field_value )
           {
             $sub_field_data = $this->_flatmap[ $acf_sub_field_key ];
-            $data_sub_field_value = $this->parse_block_acf_field_data( $acf_sub_field_key, $acf_sub_field_value, $_options );
+            $data_sub_field_value = $this->parse_block_acf_field_data( $acf_sub_field_key, $acf_sub_field_value, array_merge( $_options, [
+              'index' => $nested_index,
+            ] ) );
+
             $output[ $sub_field_data['name'] ] = $data_sub_field_value;
+
+            $nested_index++;
           }
         }
       }
@@ -1370,6 +1410,17 @@ class Builder extends Entity {
     // This is the name that we use to check for the layout's view
     $layout_name = str_replace( 'acfpb_' . $this->get_key() . '_', '', $builder_layout_name );
 
+    // Check the cache first to see if the layout was already rendered for this post
+    $pre_cache_key = $post->ID . '_' . $this->get_key() . '_' . $layout_name;
+    $cache_key = md5( $pre_cache_key );
+    $cached_layout = $this->get_cached_view( $cache_key );
+    if ( ! empty( $cached_layout ) )
+    {
+      return $cached_layout;
+    }
+
+    // If not found in the cache then we build!
+
     // We get the render data based on the builder's layout name
     $render_data = $this->get_render_data( $post, $builder_layout_name );
 
@@ -1391,16 +1442,12 @@ class Builder extends Entity {
         'blocks' => $render_data,
       ];
 
-      // Render the twig view
-      if ( preg_match( '/\.twig$/i', $layout_view_file ) && $this->get_setting( 'twig' ) )
-      {
-        $rendered_layout[] = $this->render_twig_view( $layout_view_file, $layout_data );
-      }
-      // Render the php view
-      else if ( preg_match( '/\.php$/i', $layout_view_file ) )
-      {
-        $rendered_layout[] = $this->render_php_view( $layout_view_file, $layout_data );
-      }
+      // Render the layout view
+      $rendered_layout[] = $this->render_view( $layout_view_file, [
+        'post' => $post,
+        'layout' => $layout_name,
+        'data' => $layout_data,
+      ] );
     }
 
     // No view file for the layout found/specified or rendered, so we do basic rendering
@@ -1416,6 +1463,7 @@ class Builder extends Entity {
             'post' => $post,
             'layout' => $layout_name,
             'block' => $block_data['_builder']['block'],
+            'index' => $block_index,
             'data' => $block_data,
           ] );
 
@@ -1468,8 +1516,6 @@ class Builder extends Entity {
   /**
    * Render a post's block
    *
-   * @TODO revise this
-   *
    * @param int|string|\WP_Post $post
    * @param array $options
    * @returns string
@@ -1485,6 +1531,7 @@ class Builder extends Entity {
     $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
     $layout_name = ( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
     $block_name = ( array_key_exists( 'block', $options ) ? $options['block'] : '' );
+    $index = ( array_key_exists( 'index', $options ) ? $options['index'] : 0 );
 
     // Get the entry in the flatmap to populate layout/block info if key given
     if ( ! empty( $key ) && array_key_exists( $key, $this->_flatmap ) )
@@ -1497,6 +1544,7 @@ class Builder extends Entity {
     $options['post'] = $post;
     $options['layout'] = $layout_name;
     $options['block'] = $block_name;
+    $options['index'] = $index;
 
     try {
       $block_view_file = $this->locate_block_view( $block_name, $layout_name );
@@ -1519,56 +1567,96 @@ class Builder extends Entity {
    */
   public function render_view ( $view_file, $options = [] )
   {
+    $pre_cache_key = '';
+    $cache_key = '';
     $rendered_view = '';
     $post = get_post( array_key_exists( 'post', $options ) ? $options['post'] : NULL );
     $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
     $layout_name = ( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
     $block_name = ( array_key_exists( 'block', $options ) ? $options['block'] : '' );
     $data = ( array_key_exists( 'data', $options ) ? $options['data'] : [] );
+    $index = ( array_key_exists( 'index', $options ) ? $options['index'] : 0 );
+
+    $_options = wp_parse_args( $options, [
+      'overwrite_cache' => $this->check_cache_busting(),
+    ] );
 
     // Get the entry in the flatmap to populate layout/block info
     if ( ! empty( $key ) && array_key_exists( $key, $this->_flatmap ) )
     {
       $layout_name = $this->_flatmap[ $key ][ 'layout' ]->get_prop( 'name' );
-      $block_name = $this->_flatmap[ $key ][ 'block' ]->get_prop( 'name' );
+
+      if ( array_key_exists( 'block', $this->_flatmap[ $key ] ) )
+      {
+        $block_name = $this->_flatmap[ $key ][ 'block' ]->get_prop( 'name' );
+      }
     }
 
-    // Attach builder information to the render data
-    if ( ! array_key_exists( '_builder', $data ) )
+    // Check if view was cached
+    if ( $this->get_setting( 'use_cache' ) || ! $_options['overwrite_cache'] )
     {
-      $data['_builder'] = [];
+      $pre_cache_key = $post->ID . '_' . $layout_name . '_' . $index . '_' . $block_name . '_' . $key;
+      $cache_key = md5( $pre_cache_key );
+
+      // Check if rendered view is in the cache
+      $cached_view = $this->get_cached_view( $cache_key );
+
+      // Set the rendered view if there was something found
+      if ( ! empty( $cached_view ) )
+      {
+        $rendered_view = $cached_view;
+      }
     }
 
-    // Overwrite _builder stuff with things related to this render pass
-    $data['_builder'] = array_merge( $data['_builder'], [
-      'builder' => $this->get_prop( 'name' ),
-      'version' => LVL99_ACF_PAGE_BUILDER,
-      'path' => LVL99_ACF_PAGE_BUILDER_PATH,
-      'post' => $post,
-      'key' => $key,
-      'layout' => $layout_name,
-      'block' => $block_name,
-      'data' => $data,
-      'view' => $view_file,
-      'options' => $options,
-    ] );
+    // Render the view
+    if ( empty( $rendered_view )  )
+    {
+      // Attach builder information to the render data
+      if ( ! array_key_exists( '_builder', $data ) )
+      {
+        $data['_builder'] = [];
+      }
 
-    // Render Twig template
-    if ( preg_match( '/\.twig$/i', $view_file ) && $this->get_setting( 'twig' ) )
-    {
-      $rendered_view = $this->render_twig_view( $view_file, $data );
-    }
-    // Render PHP template
-    else if ( preg_match( '/\.php$/i', $view_file ) )
-    {
-      $rendered_view = $this->render_php_view( $view_file, $data );
-    }
-    // Just in case file can't be found...
-    else
-    {
-      $error_message = 'LVL99 ACF Page Builder - No view found ';
-      error_log( $error_message );
-      $rendered_view = '<!-- ' . $error_message . ' -->';
+      // Overwrite _builder stuff with things related to this render pass
+      $data['_builder'] = array_merge( $data['_builder'], [
+        'builder' => $this->get_prop( 'name' ),
+        'version' => LVL99_ACF_PAGE_BUILDER,
+        'path' => LVL99_ACF_PAGE_BUILDER_PATH,
+        'post' => $post,
+        'key' => $key,
+        'layout' => $layout_name,
+        'block' => $block_name,
+        'index' => $index,
+        'data' => $data,
+        'view' => $view_file,
+        'options' => $options,
+        'pre_cache_key' => $pre_cache_key,
+        'cache_key' => $cache_key,
+      ] );
+
+      // Render Twig template
+      if ( preg_match( '/\.twig$/i', $view_file ) && $this->get_setting( 'twig' ) )
+      {
+        $rendered_view = $this->render_twig_view( $view_file, $data );
+
+        // Cache the view
+        $this->cache_view( $cache_key, $rendered_view );
+      }
+      // Render PHP template
+      else if ( preg_match( '/\.php$/i', $view_file ) )
+      {
+        $rendered_view = $this->render_php_view( $view_file, $data );
+
+        // Cache the view
+        $this->cache_view( $cache_key, $rendered_view );
+      }
+      // Just in case file can't be found...
+      else
+      {
+        $error_message = 'LVL99 ACF Page Builder - No view found ';
+        error_log( $error_message );
+        $rendered_view = '<!-- ' . $error_message . ' -->';
+      }
     }
 
     // Echo the rendered template
@@ -1652,6 +1740,37 @@ class Builder extends Entity {
     }
 
     return $rendered_view;
+  }
+
+  /**
+   * Cache a rendered view
+   *
+   * @param string $cache_key
+   */
+  protected function cache_view ( $cache_key, $rendered_view )
+  {
+    // @TODO support WP Object cache, or maybe some kind of HTML cache
+    if ( ! empty( $cache_key ) && $this->get_setting( 'use_cache' ) )
+    {
+      $this->_views[ $cache_key ] = $rendered_view;
+    }
+  }
+
+  /**
+   * Get a cached rendered view
+   *
+   * @param string $cache_key
+   * @return null|string
+   */
+  protected function get_cached_view ( $cache_key )
+  {
+    // @TODO support WP Object cache, or maybe some kind of HTML cache
+    if ( ! empty( $cache_key ) && array_key_exists( $cache_key, $this->_views ) )
+    {
+      return $this->_views[ $cache_key ];
+    }
+
+    return NULL;
   }
 
   /**
@@ -1794,5 +1913,25 @@ class Builder extends Entity {
     {
       return $excerpt;
     }
+  }
+
+  /**
+   * Check if the user is attempting to bust the cache, i.e. re-render view
+   *
+   * You can bust the cache for the current page's layouts/blocks by setting a query var with the name of the builder,
+   * e.g. `?acfpb_builder_reload_cache=1`
+   *
+   * @return bool
+   */
+  public function check_cache_busting ()
+  {
+    // Allow only users who can manage options to bust the cache
+    if ( ! current_user_can( 'manage_options' ) )
+    {
+      return FALSE;
+    }
+
+    $cache_buster = 'acfpb_' . $this->get_prop( 'name' ) . '_reload_cache';
+    return ( isset( $_GET[ $cache_buster ] ) ? TRUE : FALSE );
   }
 }

@@ -167,41 +167,6 @@ class Block extends Entity {
   }
 
   /**
-   * Generate a field for use within this block
-   *
-   * @param string $field_group
-   * @param string $type
-   * @param array $acf_config
-   * @param array $options
-   * @returns array
-   */
-  protected function generate_field ( $field_group, $type, $acf_config, $options = [] )
-  {
-    $generation_key = $acf_config['key'];
-    $generated_sub_field = generate_acf_field( $type, $acf_config, $options );
-
-    $_options = wp_parse_args( $options, [
-      'overwrite_field' => '',
-    ] );
-
-    if ( $_options['overwrite_field'] === $generated_sub_field )
-    {
-      $debug = [
-        'generation_key' => $generation_key,
-        'old_key' => $_options['overwrite_field'],
-        'new_key' => $generated_sub_field['key'],
-      ];
-      $this->_fields[ $field_group ][ $generated_sub_field['key'] ] = $generation_key;
-    }
-    else
-    {
-      $this->_fields[ $field_group ][ $generated_sub_field['key'] ] = $generation_key;
-    }
-
-    return $generated_sub_field;
-  }
-
-  /**
    * Generate the code to use within ACF
    *
    * @param string $key
