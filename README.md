@@ -71,7 +71,8 @@ Otherwise just download a ZIP from github: https://github.com/lvl99/acf-page-bui
     - [x] Establish consistent array/object schema format for referring to a block's field values
     - [x] Add in support for Twig rendering language, just coz I like it (but I might remove it)
   - [x] Create filter for `the_content` which pulls in all the layout meta data to render
-  - [x] Create filter for `the_excerpt` which pulls in all the layout meta data to render with HTML stripped out 
+  - [x] Create filter for `the_excerpt` which pulls in all the layout meta data to render with HTML stripped out
+  - [ ] Caching (rendered views and retrieving/formatting data) 
 
 ### v0.3.0
   - [ ] Create/research REST JSON API to fuel a frontend editor app
