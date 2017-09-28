@@ -373,9 +373,14 @@ class Builder extends Entity {
      */
     $view_dirs = apply_filters( 'LVL99\ACFPageBuilder\Builder\load_view_folders', [
       // @TODO might need to support child themes?
-      get_template_directory() . '/views/layouts',
-      get_template_directory() . '/views/blocks',
-      get_template_directory() . '/views',
+      'layout' => [
+        get_template_directory() . '/views/layouts',
+        get_template_directory() . '/views',
+      ],
+      'block' => [
+        get_template_directory() . '/views/blocks',
+        get_template_directory() . '/views',
+      ],
     ] );
 
     // Sanitise user return value
@@ -385,17 +390,24 @@ class Builder extends Entity {
     }
 
     // Always add plugin's folders to fall back on
-    $view_dirs[] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/layouts';
-    $view_dirs[] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/blocks';
-    $view_dirs[] = LVL99_ACF_PAGE_BUILDER_PATH . '/views';
+    $view_dirs['layout'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/layouts';
+    $view_dirs['layout'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views';
+    $view_dirs['block'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/blocks';
+    $view_dirs['block'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views';
 
     // Check that the paths are valid and exist
-    $valid_view_dirs = [];
-    foreach ( $view_dirs as $view_dir )
+    $valid_view_dirs = [
+      'layout' => [],
+      'block' => [],
+    ];
+    foreach ( $view_dirs as $view_type )
     {
-      if ( file_exists( $view_dir ) )
+      foreach ( $view_type as $view_dir )
       {
-        $valid_view_dirs[] = $view_dir;
+        if ( file_exists( $view_dir ) )
+        {
+          $valid_view_dirs[ $view_type ][] = $view_dir;
+        }
       }
     }
 
@@ -797,7 +809,7 @@ class Builder extends Entity {
     }
 
     // Generate potential locations that the view could exist in
-    $view_dirs = $this->_view_dirs;
+    $view_dirs = $this->_view_dirs['layout'];
     $view_filenames = [];
 
     // Reference twig filenames
@@ -852,7 +864,7 @@ class Builder extends Entity {
     }
 
     // Generate potential locations that the view could exist in
-    $view_dirs = $this->_view_dirs;
+    $view_dirs = $this->_view_dirs['block'];
     $view_filenames = [];
 
     // Reference twig filenames
@@ -1298,31 +1310,52 @@ class Builder extends Entity {
       // Check if it is a special field which has an array value
       if ( is_array( $acf_field_value ) )
       {
-        // Is a collection of fields (e.g. repeater, group)
-        if ( $field_data['type'] === 'repeater' || $field_data['type'] === 'group' )
+        // Field is a group of more fields (has sub-fields)
+        if ( $field_data['type'] === 'group' )
+        {
+          $mode = 'group';
+          $data_group = [];
+
+          foreach ( $acf_field_value as $group_field_key => $group_field_value )
+          {
+            $group_field_data = $this->_flatmap[ $group_field_key ];
+            $data_group[ $group_field_data['name'] ] = $this->parse_block_acf_field_data( $group_field_key, $group_field_value, $_options );
+          }
+
+          $output = $data_group;
+
+        }
+        // Field is a repeater
+        else if ( $field_data['type'] === 'repeater' )
         {
           $mode = 'collection';
           $data_collection = [];
+
           foreach ( $acf_field_value as $collection_index => $collection_value )
           {
-            $nested_index = 0;
-            foreach ( $collection_value as $collection_field_key => $collection_field_value )
+            // Process collection (repeater)
+            if ( is_array( $collection_value ) )
             {
-              $data_collection_item = $this->parse_block_acf_field_data( $collection_field_key, $collection_field_value, array_merge( $_options, [
-                'index' => $nested_index,
-              ] ) );
-
-              // Might be null
-              if ( ! is_null( $data_collection_item ) )
+              $nested_index = 0;
+              foreach ( $collection_value as $collection_field_key => $collection_field_value )
               {
-                $data_collection[] = $data_collection_item;
-              }
+                $data_collection_item = $this->parse_block_acf_field_data( $collection_field_key, $collection_field_value, array_merge( $_options, [
+                  'index' => $nested_index,
+                ] ) );
 
-              $nested_index++;
+                // Might be null
+                if ( ! is_null( $data_collection_item ) )
+                {
+                  $data_collection[] = $data_collection_item;
+                }
+
+                $nested_index++;
+              }
             }
           }
 
           $output = $data_collection;
+
         }
         // Field has layouts
         else if ( $field_data['type'] === 'flexible_content' )
@@ -1844,6 +1877,10 @@ class Builder extends Entity {
     if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
     {
       $content = $this->render_layout( $post );
+
+      // Strip shortcodes
+      $content = strip_shortcodes( $content );
+
       // $content = str_replace( ']]>', ']]&gt;', $content );
       return clean_excess_whitespace( strip_tags( $content, '' ) );
     }
@@ -1879,6 +1916,10 @@ class Builder extends Entity {
     if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
     {
       $excerpt = $this->render_layout( $post );
+
+      // Strip shortcodes
+      $excerpt = strip_shortcodes( $excerpt );
+
       // $excerpt = str_replace( ']]>', ']]&gt;', $excerpt );
       return clean_excess_whitespace( strip_tags( $excerpt, '' ) );
     }
@@ -1905,7 +1946,6 @@ class Builder extends Entity {
     if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
     {
       $excerpt = $this->filter_get_the_excerpt( $excerpt, $post );
-      // $excerpt = str_replace( ']]>', ']]&gt;', $excerpt );
       return $excerpt;
     }
     // Return the WordPress excerpt

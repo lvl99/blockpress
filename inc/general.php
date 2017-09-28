@@ -21,6 +21,12 @@ function get_post ( $post_id = NULL )
 
   if ( ! empty( $post_id ) )
   {
+    // Ensure if numeric that it is correctly cast
+    if ( is_numeric( $post_id ) )
+    {
+      $post_id = intval( $post_id );
+    }
+
     // Already WP_Post
     if ( is_a( $post_id, 'WP_Post' ) )
     {
@@ -116,6 +122,28 @@ function load_blocks_into_acf_field ( $type, $acf_config, $options = [] )
 
       foreach ( $_blocks as $block_name => $block_data )
       {
+        // Ensure we have the correct builder block instance and not something else
+        $block_instance = $_options['builder']->get_block_instance( $block_name );
+
+        // Check rules with this block
+        if ( array_key_exists( 'block', $_options ) )
+        {
+          // Skip any block that is not compatible with this one
+          if ( ! $block_instance->is_compatible_with( $_options['block'] ) )
+          {
+            continue;
+          }
+        }
+        // Check rules with this layout
+        else
+        {
+          // Skip any block that is not compatible with this layout
+          if ( ! $block_instance->is_compatible_with( $_options['layout'] ) )
+          {
+            continue;
+          }
+        }
+
         $generate_options = [
           'nested_key' => $_options['layout']->get_prop( 'name' ) . '_' . $acf_config['key'] . '_' . $block_name,
           'parent' => $acf_config['key'],
@@ -253,6 +281,7 @@ function check_acf_field_to_format_value ( $acf_field_key, $acf_field_value, $ac
               }
             }
           }
+          $acf_field_value = $multiple_values;
         }
         // Return a singular value
         else

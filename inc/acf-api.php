@@ -503,7 +503,6 @@ function generate_acf_field ( $type, $acf_config, $options = [] )
     {
       if ( array_key_exists( 'overwrite_field', $options ) && ! empty( $options['overwrite_field'] ) )
       {
-        $debug = 'ok to overwrite';
         $_acfpb_field_key_index[ $_field['key'] ] = $_field_key_before_encode;
       }
       else

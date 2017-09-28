@@ -23,6 +23,11 @@ class BlockColumn extends Block {
   public $type = 'special';
   public $blocks = [ '$$:__not=column,columns' ]; // See `special-sauce.php:filter_blocks`
 
+  // Restrict this block to only be visible within these layouts/blocks
+  public $rules = [
+    'block' => 'columns',
+  ];
+
   public $content = [
     // This is actually a dummy field that will be replaced by the real field in the `generate_acf` method below
     [

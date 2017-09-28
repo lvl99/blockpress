@@ -72,6 +72,38 @@ class Entity {
   protected $_fields = [];
 
   /**
+   * Rules on where this entity can be used.
+   *
+   * When blocks are nested within layouts and other blocks, these rules can further allow or restrict what gets nested
+   * where.
+   *
+   * @var array
+   */
+  public $rules = [
+    /**
+     * Specify which block names this entity is compatible with, or can be nested within.
+     *
+     * You can set '*' to let this entity be compatible with all blocks.
+     *
+     * Otherwise you can set the specific name of each block this one is compatible with.
+     *
+     * @type string|array
+     */
+    'block' => '*',
+
+    /**
+     * Specify which layout names this entity is compatible with, or can be nested within.
+     *
+     * You can set '*' to let this entity be compatible with all layouts.
+     *
+     * Otherwise you can set the specific name of each layout this one is compatible with.
+     *
+     * @type string|array
+     */
+    'layout' => '*',
+  ];
+
+  /**
    * Get a property on the entity
    *
    * @param string $prop_name
@@ -433,5 +465,66 @@ class Entity {
     }
 
     return $generated_sub_field;
+  }
+
+  /**
+   * Check if the entity is a block
+   *
+   * @return bool
+   */
+  public function is_block ()
+  {
+    return is_a( $this, __NAMESPACE__ . '\\Block' );
+  }
+
+  /**
+   * Check if the entity is a layout
+   *
+   * @return bool
+   */
+  public function is_layout ()
+  {
+    return is_a( $this, __NAMESPACE__ . '\\Layout' );
+  }
+
+  /**
+   * Check if the rules can allow this entity to interact with another
+   *
+   * @param Entity $target_entity
+   * @returns bool
+   */
+  public function is_compatible_with ( $target_entity )
+  {
+    $self_type = ( $this->is_block() ? 'block' : 'layout' );
+    $compatible_entities = ( $self_type === 'block' ? [ 'layout', 'block' ] : [ 'block' ] );
+    $rules = $this->get_prop( 'rules' );
+
+    // If rules given...
+    if ( property_exists( $this, 'rules' ) )
+    {
+      foreach ( $compatible_entities as $entity_type )
+      {
+        if ( array_key_exists( $entity_type, $rules ) )
+        {
+          // Only return true if it matches the rule
+          // @TODO apply some special sauce here for more dynamic rule matching (e.g. __not, __exclude, __if, etc.)
+          if ( ! empty( $rules[ $entity_type ])
+            && (
+               ( is_string( $rules[ $entity_type ] ) && ( $rules[ $entity_type ] === '*' || $rules[ $entity_type ] === $target_entity->get_prop( 'name' ) ) )
+            || ( is_array( $rules[ $entity_type ] ) && array_key_exists( $target_entity->get_prop( 'name' ), array_flip( $rules[ $entity_type ] ) ) )
+            )
+          )
+          {
+            return true;
+          }
+        }
+      }
+
+      // After processing and no true returned, assume false result
+      return false;
+    }
+
+    // If no rules given, then all is permissible!
+    return true;
   }
 }
