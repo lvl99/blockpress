@@ -444,7 +444,7 @@ class Builder extends Entity {
       // Instantiate Twig loader and renderer
       // -- Here's the regular Twig loader which is relative to the filesystem (will check through all the validated
       //    view folders to find a view that matches)
-      $twig_filesystem_loader = new \Twig_Loader_Filesystem( [ $this->_view_folders['layout'], $this->_view_folders['block'] ] );
+      $twig_filesystem_loader = new \Twig_Loader_Filesystem( array_merge( $this->_view_folders['layout'], $this->_view_folders['block'] ) );
 
       // -- Here's a custom Twig loader to refer to views using absolute paths
       $twig_abspath_loader = new Twig_Loader_Abspath();
