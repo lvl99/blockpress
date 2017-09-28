@@ -109,9 +109,11 @@ class Builder extends Entity {
   protected $_twig = NULL;
 
   /**
-   * Collection of validated view directories (used by both Twig and PHP rendering)
+   * Collection of validated view folders (used by both Twig and PHP rendering)
+   *
+   * @type array
    */
-  protected $_view_dirs = [];
+  protected $_view_folders = [];
 
   /**
    * Cached array of located view files
@@ -371,7 +373,7 @@ class Builder extends Entity {
      * @param array $view_dirs
      * @returns array
      */
-    $view_dirs = apply_filters( 'LVL99\ACFPageBuilder\Builder\load_view_folders', [
+    $view_folders = apply_filters( 'LVL99\ACFPageBuilder\Builder\load_view_folders', [
       // @TODO might need to support child themes?
       'layout' => [
         get_template_directory() . '/views/layouts',
@@ -384,35 +386,38 @@ class Builder extends Entity {
     ] );
 
     // Sanitise user return value
-    if ( ! is_array( $view_dirs ) )
+    if ( ! is_array( $view_folders ) )
     {
-      $view_dirs = [];
+      $view_folders = [
+      	'layout' => [],
+        'block' => [],
+      ];
     }
 
     // Always add plugin's folders to fall back on
-    $view_dirs['layout'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/layouts';
-    $view_dirs['layout'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views';
-    $view_dirs['block'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/blocks';
-    $view_dirs['block'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views';
+    $view_folders['layout'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/layouts';
+    $view_folders['layout'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views';
+    $view_folders['block'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/blocks';
+    $view_folders['block'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views';
 
     // Check that the paths are valid and exist
-    $valid_view_dirs = [
+    $valid_view_folders = [
       'layout' => [],
       'block' => [],
     ];
-    foreach ( $view_dirs as $view_type )
+    foreach ( $view_folders as $view_type => $view_dirs )
     {
-      foreach ( $view_type as $view_dir )
+      foreach ( $view_dirs as $view_dir )
       {
         if ( file_exists( $view_dir ) )
         {
-          $valid_view_dirs[ $view_type ][] = $view_dir;
+          $valid_view_folders[ $view_type ][] = $view_dir;
         }
       }
     }
 
     // Save the validated view folders into the instance
-    $this->_view_dirs = $valid_view_dirs;
+    $this->_view_folders = $valid_view_folders;
   }
 
   /**
@@ -439,7 +444,8 @@ class Builder extends Entity {
       // Instantiate Twig loader and renderer
       // -- Here's the regular Twig loader which is relative to the filesystem (will check through all the validated
       //    view folders to find a view that matches)
-      $twig_filesystem_loader = new \Twig_Loader_Filesystem( $this->_view_dirs );
+      $twig_filesystem_view_folders = new \Twig_Loader_Array( [ $this->_view_folders['layout'], $this->_view_folders['block'] ] );
+      $twig_filesystem_loader = new \Twig_Loader_Filesystem( $twig_filesystem_view_folders );
 
       // -- Here's a custom Twig loader to refer to views using absolute paths
       $twig_abspath_loader = new Twig_Loader_Abspath();
@@ -809,7 +815,7 @@ class Builder extends Entity {
     }
 
     // Generate potential locations that the view could exist in
-    $view_dirs = $this->_view_dirs['layout'];
+    $view_dirs = $this->_view_folders['layout'];
     $view_filenames = [];
 
     // Reference twig filenames
@@ -864,7 +870,7 @@ class Builder extends Entity {
     }
 
     // Generate potential locations that the view could exist in
-    $view_dirs = $this->_view_dirs['block'];
+    $view_dirs = $this->_view_folders['block'];
     $view_filenames = [];
 
     // Reference twig filenames
