@@ -30,7 +30,7 @@ class BlockColumns extends Block {
       'name' => 'columns',
       'label' => 'Columns',
       'layout' => 'block',
-      'button_label' => 'Add Column',
+      'button_label' => 'Add...',
       'layouts' => [],
     ],
   ];

@@ -11,5 +11,5 @@ $block_classes = $configure['element_class'];
 ?>
 
 <div <?php if ( ! empty( $configure['element_id'] ) ) : ?> id="<?php echo $configure['element_id']; ?>" <?php endif; ?> class="layout-block-text <?php echo $block_classes; ?>">
-  <?php echo $content['text']; ?>
+  <?php echo do_shortcode( wpautop( $content['text'] ) ); ?>
 </div>

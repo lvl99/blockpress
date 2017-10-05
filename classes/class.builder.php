@@ -208,7 +208,7 @@ class Builder extends Entity {
        * @param bool
        * @returns bool
        */
-      'use_render_hooks' => apply_filters( 'LVL99\ACFPageBuilder\Builder\default_settings\use_render_hooks', TRUE ),
+      'use_render_hooks' => apply_filters( 'LVL99\ACFPageBuilder\Builder\default_settings\use_render_hooks', FALSE ),
 
       /**
        * Use cache for rendering layouts, only if not in development mode
@@ -1336,31 +1336,30 @@ class Builder extends Entity {
           $mode = 'collection';
           $data_collection = [];
 
+          // The field value will be an array that contains groups of fields
           foreach ( $acf_field_value as $collection_index => $collection_value )
           {
-            // Process collection (repeater)
+            // Process each item in the repeater
             if ( is_array( $collection_value ) )
             {
               $nested_index = 0;
-              foreach ( $collection_value as $collection_field_key => $collection_field_value )
+              $data_collection_item = [];
+
+              foreach ( $collection_value as $item_field_key => $item_field_value )
               {
-                $data_collection_item = $this->parse_block_acf_field_data( $collection_field_key, $collection_field_value, array_merge( $_options, [
+                $item_field_data = $this->_flatmap[ $item_field_key ];
+                $data_collection_item[ $item_field_data['name'] ] = $this->parse_block_acf_field_data( $item_field_key, $item_field_value, array_merge( $_options, [
+                  // @TODO not sure if this is needed
                   'index' => $nested_index,
                 ] ) );
-
-                // Might be null
-                if ( ! is_null( $data_collection_item ) )
-                {
-                  $data_collection[] = $data_collection_item;
-                }
-
                 $nested_index++;
               }
+
+              $data_collection[] = $data_collection_item;
             }
           }
 
           $output = $data_collection;
-
         }
         // Field has layouts
         else if ( $field_data['type'] === 'flexible_content' )
@@ -1406,8 +1405,8 @@ class Builder extends Entity {
     // Output was generated, so ensure it is the returned output
     if ( $mode !== 'field' )
     {
-      // Return as a collection
-      if ( $mode === 'collection' )
+      // Return as a collection or array
+      if ( $mode === 'collection' || $mode === 'group' )
       {
         $return_output = $output;
       }
@@ -1918,15 +1917,30 @@ class Builder extends Entity {
     }
 
     // Return the rendered layout content if Page Builder is enabled
-    if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
+    if ( empty( $excerpt ) && is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
     {
-      $excerpt = $this->render_layout( $post );
+      // Check if already has an excerpt, if so use that
+      if ( ! empty( $post->post_excerpt ) )
+      {
+        $excerpt = wp_trim_excerpt( $post->post_excerpt );
+      }
+      // Check if post content is set, if so use that
+      else if ( ! empty( $post->post_content ) )
+      {
+        $excerpt = wp_trim_excerpt( $post->post_content );
+      }
+      // Otherwise fallback on the rendered layout
+      // @note this can have issues if no excerpt or no content found and it gets stuck in a recursive loop...
+      else
+      {
+        $excerpt = $this->render_layout( $post );
+      }
 
       // Strip shortcodes
       $excerpt = strip_shortcodes( $excerpt );
 
       // $excerpt = str_replace( ']]>', ']]&gt;', $excerpt );
-      return clean_excess_whitespace( strip_tags( $excerpt, '' ) );
+      return wp_trim_excerpt( clean_excess_whitespace( strip_tags( $excerpt, '' ) ) );
     }
     // Return the WordPress default excerpt
     else

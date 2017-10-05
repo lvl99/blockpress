@@ -35,7 +35,7 @@ class BlockColumn extends Block {
       'label' => 'Blocks',
       'type' => 'flexible_content',
       'layout' => 'block',
-      'button_label' => 'Add Block',
+      'button_label' => 'Add...',
       'sub_fields' => [],
     ],
   ];
