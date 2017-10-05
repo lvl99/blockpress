@@ -10,13 +10,6 @@
       "email": "matt@lvl99.com"
     }
   ],
-  "minimum-stability": "dev",
-  "prefer-stable": true,
-  "config": {
-    "preferred-install": {
-      "*": "stable"
-    }
-  },
   "require": {
     "php": ">= 7.0",
     "composer/installers": "^1.4",
