@@ -6,7 +6,7 @@ Description: Define and build custom post/page layouts for your ACF-powered Word
 Author: Matt Scheurich
 Author URI: http://lvl99.com/
 Text Domain: lvl99-acfpb
-Version: 0.2.0
+Version: 0.2.1
 */
 
 /**
@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\ACFPageBuilder\\Builder' ) )
 {
-  define( 'LVL99_ACF_PAGE_BUILDER', '0.2.0' );
+  define( 'LVL99_ACF_PAGE_BUILDER', '0.2.1' );
   define( 'LVL99_ACF_PAGE_BUILDER_PATH', __DIR__ );
 
   // ACF Page Builder dependencies

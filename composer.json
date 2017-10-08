@@ -1,7 +1,8 @@
 {
   "name": "lvl99/acf-page-builder",
   "description": "Define and build custom post/page layouts for your ACF-powered WordPress website",
-  "homepage"   : "https://github.com/lvl99/acf-page-builder",
+  "homepage": "https://github.com/lvl99/acf-page-builder",
+  "version": "0.2.1",
   "type": "wordpress-plugin",
   "license": "MIT",
   "authors": [
