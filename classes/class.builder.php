@@ -211,13 +211,14 @@ class Builder extends Entity {
       'use_render_hooks' => apply_filters( 'LVL99\ACFPageBuilder\Builder\default_settings\use_render_hooks', FALSE ),
 
       /**
-       * Use cache for rendering layouts, only if not in development mode
+       * Use cache features when processing builder data and rendering layouts/blocks
+       * You can use the cache busting query var `?acfpb_builder_reload_cache=1` to bust the cache
        *
        * @hook LVL99\ACFPageBuilder\Builder\default_settings\use_cache
        * @param bool
        * @returns bool
        */
-      'use_cache' => apply_filters( 'LVL99\ACFPageBuilder\Builder\default_settings\use_cache', ( WP_ENV === 'development' ? FALSE : WP_CACHE ) ),
+      'use_cache' => apply_filters( 'LVL99\ACFPageBuilder\Builder\default_settings\use_cache', ( defined( 'WP_CACHE' ) ? WP_CACHE : TRUE ) ),
     ] );
 
     /**
@@ -1106,6 +1107,13 @@ class Builder extends Entity {
     $post = get_post( $post );
     $post_cache_key = $post->post_type . '_' . $post->ID;
 
+    $data['_cached_render_data'] = [
+      'post_type' => $post->post_type,
+      'post_id' => $post->ID,
+      'post_cache_key' => $post_cache_key,
+      'key' => $key,
+    ];
+
     // @TODO maybe do some persistent WP Object cache stuff here rather than just in memory?
     $this->_render_data[ $post_cache_key ][ $key ] = $data;
   }
@@ -1181,10 +1189,11 @@ class Builder extends Entity {
         $block_name = get_row_layout();
         $block_data = $this->parse_block_acf_layout_row_data( $acf_layout_row_data, [
           'post' => $post,
-          'builder' => $this->get_prop( 'name' ),
+          'key' => $key,
           'layout' => $layout_name,
           'block' => $block_name,
           'index' => $index,
+          'builder' => $this->get_prop( 'name' ),
         ] );
 
         // Add the block data to the layout's render data
@@ -1214,6 +1223,7 @@ class Builder extends Entity {
       'builder' => $this->get_prop( 'name' ),
       'layout' => '',
       'block' => '',
+      'parent' => '',
       'index' => 0,
     ] );
 
@@ -1448,7 +1458,10 @@ class Builder extends Entity {
     $layout_name = str_replace( 'acfpb_' . $this->get_key() . '_', '', $builder_layout_name );
 
     // Check the cache first to see if the layout was already rendered for this post
-    $pre_cache_key = $post->ID . '_' . $this->get_key() . '_' . $layout_name;
+    $pre_cache_key = $this->generate_pre_cache_key( [
+      'post' => $post,
+      'layout' => $layout_name,
+    ] );
     $cache_key = md5( $pre_cache_key );
     $cached_layout = $this->get_cached_view( $cache_key );
     if ( ! empty( $cached_layout ) )
@@ -1475,6 +1488,7 @@ class Builder extends Entity {
           'layout_slug' => $builder_layout_name,
           'view' => $layout_view_file,
           'options' => $options,
+          'settings' => $this->settings,
         ],
         'blocks' => $render_data,
       ];
@@ -1560,21 +1574,29 @@ class Builder extends Entity {
    */
   public function render_block ( $post = NULL, $options = [] )
   {
-    $post = get_post( $post );
     $block_view_file = '';
     $rendered_block = '';
 
     // Get the layout/block name
+    $post = get_post( $post );
     $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
     $layout_name = ( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
+    $parent = ( array_key_exists( 'parent', $options ) ? $options['parent'] : '' );
+    $index = ( array_key_exists( 'index', $options ) ? $options['index'] : '' );
     $block_name = ( array_key_exists( 'block', $options ) ? $options['block'] : '' );
-    $index = ( array_key_exists( 'index', $options ) ? $options['index'] : 0 );
 
-    // Get the entry in the flatmap to populate layout/block info if key given
+    // Get the entry in the flatmap to populate layout/block/parent info if key given
     if ( ! empty( $key ) && array_key_exists( $key, $this->_flatmap ) )
     {
-      $layout_name = $this->_flatmap[ $key ][ 'layout' ]->get_prop( 'name' );
-      $block_name = $this->_flatmap[ $key ][ 'block' ]->get_prop( 'name' );
+      $block_data = $this->_flatmap[ $key ];
+      $layout_name = $block_data[ 'layout' ]->get_prop( 'name' );
+      $block_name = $block_data[ 'block' ]->get_prop( 'name' );
+
+      // Get the block's parent (if nested it's key of parent block, or name of layout)
+      if ( array_key_exists( 'parent', $block_data ) )
+      {
+        $parent = $block_data[ 'parent' ];
+      }
     }
 
     // Update options to pass through
@@ -1582,6 +1604,7 @@ class Builder extends Entity {
     $options['layout'] = $layout_name;
     $options['block'] = $block_name;
     $options['index'] = $index;
+    $options['parent'] = $parent;
 
     try {
       $block_view_file = $this->locate_block_view( $block_name, $layout_name );
@@ -1607,13 +1630,48 @@ class Builder extends Entity {
     $pre_cache_key = '';
     $cache_key = '';
     $rendered_view = '';
-    $post = get_post( array_key_exists( 'post', $options ) ? $options['post'] : NULL );
-    $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
-    $layout_name = ( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
-    $block_name = ( array_key_exists( 'block', $options ) ? $options['block'] : '' );
-    $data = ( array_key_exists( 'data', $options ) ? $options['data'] : [] );
-    $index = ( array_key_exists( 'index', $options ) ? $options['index'] : 0 );
 
+    // Get the post
+    $post = get_post( array_key_exists( 'post', $options ) ? $options['post'] : NULL );
+
+    // A specific key to the layout/block
+    $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
+
+    // The name of the layout being rendered
+    if ( array_key_exists( 'layout_name', $options ) )
+    {
+      $layout_name = $this->get_layout_name( $options['layout_name'] );
+    }
+    else
+    {
+      $layout_name = $this->get_layout_name( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
+    }
+
+    // The key (or name) of the parent layout/block
+    $parent = ( array_key_exists( 'parent', $options ) ? $options['parent'] : $layout_name );
+
+    // The block layout index count in the layout row
+    $index = ( array_key_exists( 'index', $options ) ? $options['index'] : '' );
+
+    // The name of the block being rendered
+    if ( array_key_exists( 'block_name', $options ) )
+    {
+      $block_name = $this->get_block_name( $options['block_name'] );
+    }
+    else
+    {
+      $block_name = $this->get_block_name( array_key_exists( 'block', $options ) ? $options['block'] : '' );
+    }
+
+    $data = ( array_key_exists( 'data', $options ) ? $options['data'] : [] );
+
+    // Convert layout_slug to layout_name
+    if ( strpos( $layout_name, $this->get_prop( 'name' ) ) >= 0 )
+    {
+      $layout_name = str_replace( 'acfpb_' . $this->get_prop( 'name' ) . '_', '', $layout_name );
+    }
+
+    // Set specific options for render_view
     $_options = wp_parse_args( $options, [
       'overwrite_cache' => $this->check_cache_busting(),
     ] );
@@ -1621,8 +1679,16 @@ class Builder extends Entity {
     // Get the entry in the flatmap to populate layout/block info
     if ( ! empty( $key ) && array_key_exists( $key, $this->_flatmap ) )
     {
+      // Get the layout name being rendered
       $layout_name = $this->_flatmap[ $key ][ 'layout' ]->get_prop( 'name' );
 
+      // Get the parent key, if rendering nested block
+      if ( array_key_exists( 'parent', $this->_flatmap[ $key ] ) )
+      {
+        $parent = $this->_flatmap[ $key ][ 'parent' ];
+      }
+
+      // Get the block name being rendered
       if ( array_key_exists( 'block', $this->_flatmap[ $key ] ) )
       {
         $block_name = $this->_flatmap[ $key ][ 'block' ]->get_prop( 'name' );
@@ -1632,7 +1698,16 @@ class Builder extends Entity {
     // Check if view was cached
     if ( $this->get_setting( 'use_cache' ) || ! $_options['overwrite_cache'] )
     {
-      $pre_cache_key = $post->ID . '_' . $layout_name . '_' . $index . '_' . $block_name . '_' . $key;
+      $pre_cache_key = $this->generate_pre_cache_key( [
+        'post' => $post,
+        'key' => $key,
+        'layout_name' => $layout_name,
+        'parent' => $parent,
+        'block_name' => $block_name,
+        'index' => $index,
+      ] );
+
+      // 4. Get the md5 hash
       $cache_key = md5( $pre_cache_key );
 
       // Check if rendered view is in the cache
@@ -1669,6 +1744,7 @@ class Builder extends Entity {
         'options' => $options,
         'pre_cache_key' => $pre_cache_key,
         'cache_key' => $cache_key,
+        'overwrite_cache' => $_options['overwrite_cache'],
       ] );
 
       // Render Twig template
@@ -1764,6 +1840,8 @@ class Builder extends Entity {
       extract( $data, EXTR_SKIP );
 
       ob_start();
+      // @debug
+      // var_dump( get_defined_vars() );
       include $file;
       $rendered_view = ob_get_contents();
       ob_end_clean();
@@ -1777,6 +1855,95 @@ class Builder extends Entity {
     }
 
     return $rendered_view;
+  }
+
+  /**
+   * Generates a human-readable unique cache key for the layout/block
+   *
+   * @param array $options
+   * @return string
+   */
+  protected function generate_pre_cache_key ( $options = [] )
+  {
+    // Get the post
+    $post = get_post( array_key_exists( 'post', $options ) ? $options['post'] : NULL );
+
+    // A specific key to the layout/block
+    $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
+
+    // The name of the layout being rendered
+    if ( array_key_exists( 'layout_name', $options ) )
+    {
+      $layout_name = $this->get_layout_name( $options['layout_name'] );
+    }
+    else
+    {
+      $layout_name = $this->get_layout_name( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
+    }
+
+    // The key (or name) of the parent layout/block
+    $parent = ( array_key_exists( 'parent', $options ) ? $options['parent'] : $layout_name );
+
+    // The block layout index count in the layout row
+    $index = ( array_key_exists( 'index', $options ) ? $options['index'] : '' );
+
+    // The name of the block being rendered
+    if ( array_key_exists( 'block_name', $options ) )
+    {
+      $block_name = $this->get_block_name( $options['block_name'] );
+    }
+    else
+    {
+      $block_name = $this->get_block_name( array_key_exists( 'block', $options ) ? $options['block'] : '' );
+    }
+
+    // Get the entry in the flatmap to populate layout/block info
+    if ( ! empty( $key ) && array_key_exists( $key, $this->_flatmap ) )
+    {
+      $entity_data = $this->_flatmap[ $key ];
+
+      // Get the layout name being rendered
+      $layout_name = $this->get_layout_name( $entity_data[ 'layout' ] );
+
+      // Get the parent key, if rendering nested block
+      if ( array_key_exists( 'parent', $entity_data ) )
+      {
+        $parent = $entity_data[ 'parent' ];
+      }
+
+      // Get the block name being rendered
+      if ( array_key_exists( 'block', $entity_data ) )
+      {
+        $block_name = $this->get_block_name( $entity_data[ 'block' ] );
+      }
+    }
+
+    //
+    // Build the pre-cache key
+    //
+
+    // 1. Set the post ID, builder name and layout name
+    $pre_cache_key = $post->ID . '_' . $this->get_key() . '_' . $layout_name;
+
+    // 2. Set the parent
+    if ( ! empty( $parent ) && $parent !== $layout_name )
+    {
+      $pre_cache_key .= '_' . $parent;
+    }
+
+    // 3. Set the index and block
+    if ( ! empty( $block_name ) )
+    {
+      // The index of the block within the layout/parent block
+      if ( ! is_null( $index ) && $index !== '' )
+      {
+        $pre_cache_key .= '_' . $index;
+      }
+
+      $pre_cache_key .=  '_' . $block_name;
+    }
+
+    return $pre_cache_key;
   }
 
   /**
@@ -1804,7 +1971,10 @@ class Builder extends Entity {
     // @TODO support WP Object cache, or maybe some kind of HTML cache
     if ( ! empty( $cache_key ) && array_key_exists( $cache_key, $this->_views ) )
     {
-      return $this->_views[ $cache_key ];
+      $output = '<!-- BEGIN LVL99 ACF Page Builder - Cached View: ' . $cache_key . ' -->' . "\n";
+      $output .= $this->_views[ $cache_key ] . "\n";
+      $output .= '<!-- END LVL99 ACF Page Builder - Cached View: ' . $cache_key . ' -->' . "\n";
+      return $output;
     }
 
     return NULL;
@@ -1992,5 +2162,58 @@ class Builder extends Entity {
 
     $cache_buster = 'acfpb_' . $this->get_prop( 'name' ) . '_reload_cache';
     return ( isset( $_GET[ $cache_buster ] ) ? TRUE : FALSE );
+  }
+
+  /**
+   * Get the layout's name
+   *
+   * @param string|Layout $layout
+   * @return string
+   * @throws \Error
+   */
+  public function get_layout_name ( $layout )
+  {
+    // Get the name from the layout instance
+    if ( is_a( $layout, 'Layout' ) )
+    {
+      return $layout->get_prop( 'name' );
+
+    }
+    // Otherwise get the name from a string
+    else if ( is_string( $layout ) )
+    {
+      if ( strpos( $layout, 'actpb_' . $this->get_prop( 'name' ) . '_' ) >= 0 )
+      {
+        $layout = str_replace( 'actpb_' . $this->get_prop( 'name' ) . '_', '', $layout );
+      }
+
+      return $layout;
+    }
+
+    throw new \Error( 'No name detected for the given layout' );
+  }
+
+  /**
+   * Get the block's name
+   *
+   * @param string|Block $block
+   * @return string
+   * @throws \Error
+   */
+  public function get_block_name ( $block )
+  {
+    // Get the name from the block instance
+    if ( is_a( $block, 'Block' ) )
+    {
+      return $block->get_prop( 'name' );
+
+    }
+    // Otherwise get the name from a string
+    else if ( is_string( $block ) )
+    {
+      return $block;
+    }
+
+    throw new \Error( 'No name detected for the given block' );
   }
 }

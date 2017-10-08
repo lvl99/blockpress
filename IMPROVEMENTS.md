@@ -14,3 +14,7 @@ A list of things that I need to refactor/improve:
   - I used this `$options` object as a way to pass through common data shared between various functions in classes and
     outside, but it's getting confusing. There must be a better way...
   - You know, I've just realised that layouts are just exactly like blocks -- they should support extra fields too!
+  - A lot of the `$options` got a bit mucked up (things like `layout` can be layout instance or a layout name or
+    layout slug). Need to really standardise that to make it clear and consistent.
+  - Figure out how to standardise nested block parent references for easy rendering and caching retrieval.
+    
