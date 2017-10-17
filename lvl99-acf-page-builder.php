@@ -12,7 +12,7 @@ Version: 0.2.1
 /**
  * # ACF Page Builder
  *
- * v0.2.0
+ * v0.2.1
  *
  * Create rich page layouts using ACF PRO. No need for Gutenberg, Divi Builder or Visual Composer! ... well, maybe...
  *

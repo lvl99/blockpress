@@ -1,6 +1,6 @@
 # LVL99 ACF Page Builder
 
-v0.2.0
+v0.2.1
 
 By Matt Scheurich <matt@lvl99.com>
 
@@ -60,6 +60,8 @@ Otherwise just download a ZIP from github: https://github.com/lvl99/acf-page-bui
 
 ## Roadmap
 
+This is a basic plan for features.
+
 ### v0.1.0
   - [x] Basic architecture of generating ACF configuration for layouts.
     - [x] Create ACF configs for layouts (essentially field group that contains a flexible content field)
@@ -69,10 +71,10 @@ Otherwise just download a ZIP from github: https://github.com/lvl99/acf-page-bui
 ### v0.2.0
   - [x] Figure out how to render layouts easily in templates 
     - [x] Establish consistent array/object schema format for referring to a block's field values
-    - [x] Add in support for Twig rendering language, just coz I like it (but I might remove it)
+    - ~~[x] Add in support for Twig rendering language, just coz I like it (but I might remove it)~~ Scheduled for removal
   - [x] Create filter for `the_content` which pulls in all the layout meta data to render
   - [x] Create filter for `the_excerpt` which pulls in all the layout meta data to render with HTML stripped out
-  - [ ] Caching (rendered views and retrieving/formatting data) 
+  - [x] Caching (rendered views and retrieving/formatting data)
 
 ### v0.3.0
   - [ ] Create/research REST JSON API to fuel a frontend editor app
@@ -83,6 +85,9 @@ Otherwise just download a ZIP from github: https://github.com/lvl99/acf-page-bui
 ### v0.5.0
   - [ ] Investigate existing editors to potentially integrate into frontend editor: CKeditor, maybe?
   - [ ] Build a frontend editor app
+
+There is also the [IMPROVEMENTS.md](IMPROVEMENTS.md) file which lists necessary improvements that should (and will!)
+happen to the code and the API.
 
 
 ## Contributing

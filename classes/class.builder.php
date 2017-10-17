@@ -1228,7 +1228,7 @@ class Builder extends Entity {
     ] );
 
     // Test if its a registered Builder block
-    $is_block = array_key_exists( 'acf_fc_layout', $acf_layout_row_data ) && array_key_exists( $acf_layout_row_data['acf_fc_layout'], $this->get_blocks() );
+    $is_block = ! empty( $acf_layout_row_data ) && array_key_exists( 'acf_fc_layout', $acf_layout_row_data ) && array_key_exists( $acf_layout_row_data['acf_fc_layout'], $this->get_blocks() );
 
     // Process block layout
     if ( $is_block )
