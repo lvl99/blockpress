@@ -1096,6 +1096,33 @@ class Builder extends Entity {
   }
 
   /**
+   * Check if a layout/block's data has been mapped
+   *
+   * @param $key
+   * @return bool
+   */
+  public function check_is_mapped( $key )
+  {
+    return array_key_exists( $key, $this->_flatmap );
+  }
+
+  /**
+   * Get the layout/block's mapped data by key
+   *
+   * @param $key
+   * @return array|null
+   */
+  public function get_mapped_data ( $key )
+  {
+    if ( $this->check_is_mapped( $key ) )
+    {
+      return $this->_flatmap[ $key ];
+    }
+
+    return NULL;
+  }
+
+  /**
    * Cache render data for a post.
    *
    * @param int|string|\WP_Post $post
@@ -1219,6 +1246,7 @@ class Builder extends Entity {
     $data = [];
 
     $_options = wp_parse_args( $options, [
+      'key' => '',
       'post' => '',
       'builder' => $this->get_prop( 'name' ),
       'layout' => '',
@@ -1237,10 +1265,13 @@ class Builder extends Entity {
       foreach ( $acf_layout_row_data as $acf_field_key => $acf_field_value )
       {
         // Get the block's mapped field data
-        if ( preg_match( '/^field_/i', $acf_field_key ) && array_key_exists( $acf_field_key, $this->_flatmap ) )
+        if ( preg_match( '/^field_/i', $acf_field_key ) && $this->check_is_mapped( $acf_field_key ) )
         {
-          $field_data = $this->_flatmap[ $acf_field_key ];
+          $field_data = $this->get_mapped_data( $acf_field_key );
           $field_value = $this->parse_block_acf_field_data( $acf_field_key, $acf_field_value, $_options );
+
+          // Save a reference to the builder's key within the fetched row data
+          $data['_field_key'] = $acf_field_key;
 
           // Ensure field is organised into the block's field groups
           if ( array_key_exists( 'field_group', $field_data ) && ! empty( $field_data['field_group'] ) )
@@ -1516,6 +1547,10 @@ class Builder extends Entity {
             'block' => $block_data['_builder']['block'],
             'index' => $block_index,
             'data' => $block_data,
+            // @TODO allow parent cache key to be set so _builder can refer to parent
+            'parent' => $builder_layout_name,
+            'parent_pre_cache_key' => $pre_cache_key,
+            'parent_cache_key' => $cache_key,
           ] );
 
           // Only render this block if it is not empty
@@ -1592,7 +1627,7 @@ class Builder extends Entity {
       $layout_name = $block_data[ 'layout' ]->get_prop( 'name' );
       $block_name = $block_data[ 'block' ]->get_prop( 'name' );
 
-      // Get the block's parent (if nested it's key of parent block, or name of layout)
+      // Get the block's parent (if nested its key of parent block, or name of layout)
       if ( array_key_exists( 'parent', $block_data ) )
       {
         $parent = $block_data[ 'parent' ];
