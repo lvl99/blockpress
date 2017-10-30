@@ -17,7 +17,7 @@ $block_classes = $configure['element_class'];
     $block_view_file = lvl99_acf_page_builder()->locate_block_view( $block['_builder']['block'], $block['_builder']['layout'] );
     echo lvl99_acf_page_builder()->render_view( $block_view_file, [
       'layout' => $block['_builder']['layout'],
-      'parent' => $_field_key,
+      'parent' => $_builder['cache_key'] . '_' . $block_index, // $_field_key
       'parent_cache_key' => $_builder['cache_key'],
       'index' => $block_index,
       'block' => $block['_builder']['block'],
