@@ -22,6 +22,7 @@ class BlockImage extends Block {
       'label' => 'Image',
       'type' => 'image',
       'return_format' => 'array',
+      '_wpml' => 'copy',
     ],
   ];
 }

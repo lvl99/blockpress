@@ -32,6 +32,7 @@ class BlockColumns extends Block {
       'layout' => 'block',
       'button_label' => 'Add...',
       'layouts' => [],
+      '_wpml' => 'copy',
     ],
   ];
 
@@ -75,6 +76,7 @@ class BlockColumns extends Block {
       'layout' => $acf['sub_fields'][0]['layout'],
       'button_label' => $acf['sub_fields'][0]['button_label'],
       'layouts' => [],
+      '_wpml' => 'copy',
     ], [
       'overwrite_field' => $acf['sub_fields'][0]['key'],
       'builder' => $_options[ 'builder' ],

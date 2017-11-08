@@ -24,6 +24,7 @@ class BlockText extends Block {
       'tabs' => 'all',
       'toolbar' => 'full',
       'media_upload' => 1,
+      '_wpml' => 'translate',
     ],
   ];
 }

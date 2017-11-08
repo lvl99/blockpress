@@ -6,13 +6,13 @@ Description: Define and build custom post/page layouts for your ACF-powered Word
 Author: Matt Scheurich
 Author URI: http://lvl99.com/
 Text Domain: lvl99-acfpb
-Version: 0.2.1
+Version: 0.2.2
 */
 
 /**
  * # ACF Page Builder
  *
- * v0.2.1
+ * v0.2.2
  *
  * Create rich page layouts using ACF PRO. No need for Gutenberg, Divi Builder or Visual Composer! ... well, maybe...
  *
@@ -135,4 +135,31 @@ if ( ! function_exists( 'lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\AC
   add_action( 'LVL99\ACFPageBuilder\Builder\load_blocks', 'lvl99_acf_page_builder_load_special_blocks', 20, 1 );
   add_action( 'LVL99\ACFPageBuilder\Builder\load_layouts', 'lvl99_acf_page_builder_load_layouts', 10, 1 );
   add_action( 'acf/init', 'lvl99_acf_page_builder' );
+
+  /**
+   * Admin
+   */
+  if ( ! function_exists( 'admin_lvl99_acf_page_builder' ) && ! class_exists( 'LVL99\\ACFPageBuilder\\Admin' ) )
+  {
+    require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/classes/admin/class.admin.php' );
+
+    function admin_lvl99_acf_page_builder ()
+    {
+      global $admin_lvl99_acf_page_builder;
+
+      if ( is_admin() && current_user_can( 'manage_options' ) )
+      {
+        if ( ! isset( $admin_lvl99_acf_page_builder ) )
+        {
+          $admin_lvl99_acf_page_builder = new LVL99\ACFPageBuilder\Admin( lvl99_acf_page_builder() );
+          $admin_lvl99_acf_page_builder->initialise();
+        }
+
+        return $admin_lvl99_acf_page_builder;
+      }
+    }
+
+    // Initialise the admin
+    add_action( 'admin_init', 'admin_lvl99_acf_page_builder' );
+  }
 }
