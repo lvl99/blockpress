@@ -1,9 +1,9 @@
 <?php
 /**
- * ACF Page Builder - Template
+ * ACF BlockPress - Template
  */
 
-namespace LVL99\ACFPageBuilder;
+namespace LVL99\BlockPress;
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly

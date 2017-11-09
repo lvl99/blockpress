@@ -1,11 +1,11 @@
 <?php
 /**
- * ACF Page Builder - WPML
+ * ACF BlockPress - WPML
  *
  * Manage the WPML configuration for blocks and layouts
  */
 
-namespace LVL99\ACFPageBuilder;
+namespace LVL99\BlockPress;
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
@@ -55,7 +55,7 @@ class WPML {
   public function parse_builder ( $builder )
   {
     // Verify the build is a Builder instance
-    if ( ! is_a( $builder, '\LVL99\ACFPageBuilder\Builder' ) )
+    if ( ! is_a( $builder, '\LVL99\BlockPress\Builder' ) )
     {
       throw new \Error( 'Invalid builder given' );
     }

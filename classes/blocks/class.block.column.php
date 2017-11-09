@@ -5,7 +5,7 @@
  * Represents a number of columns which each hold other types of flexible content
  */
 
-namespace LVL99\ACFPageBuilder;
+namespace LVL99\BlockPress;
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
@@ -18,7 +18,7 @@ class BlockColumn extends Block {
   public $display = 'block';
 
   // We can specify what layout blocks can be placed within this block by putting their string names here
-  // By default any `flexible_content` field will support all layouts defined in the Page Builder
+  // By default any `flexible_content` field will support all layouts defined in BlockPress
   // Blocks which nest other blocks should be marked as the "special" type
   public $type = 'special';
   public $blocks = [ '$$:__not=column,columns' ]; // See `special-sauce.php:filter_blocks`

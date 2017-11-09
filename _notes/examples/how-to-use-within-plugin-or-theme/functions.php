@@ -6,7 +6,7 @@
  * Let's imagine aside from the base layouts/blocks that you want to add some custom layouts and blocks for your theme
  * to support.
  *
- * There are a few filters which are supported to allow adding (or changing) the layouts/blocks which Page Builder
+ * There are a few filters which are supported to allow adding (or changing) the layouts/blocks which BlockPress
  * makes available in the backend.
  *
  * For the moment this is all code-based (i.e. no data saved in the database). Hopefully in the future there might be
@@ -30,9 +30,9 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 define( 'MY_COOL_THEME_PATH', __DIR__ );
 
 //
-// Here we specify a function that will add extra layouts to load into the Page Builder.
+// Here we specify a function that will add extra layouts to load into BlockPress.
 //
-// Loading in layouts is important as the Page Builder will dynamically generate the ACF configuration to view the
+// Loading in layouts is important as BlockPress will dynamically generate the ACF configuration to view the
 // layout as a field group with a single flexible content field to allow the user to add content via the blocks.
 //
 // For the custom layouts we'll store these within our theme directory structure.
@@ -47,7 +47,7 @@ function load_acfpb_layouts ( $load_layouts )
   $load_layouts['mct_portfolio'] = [
     //
     // Each layout needs a `class` and a `path`. The `class` is what's used when creating the layout's instance within
-    // the Page Builder.
+    // BlockPress.
     //
     'class' => 'My_Cool_Theme\\LayoutPortfolio',
 
@@ -65,7 +65,7 @@ function load_acfpb_layouts ( $load_layouts )
 // Filters are essentially namespaced and describe the path of the function which fires the filter.
 // By default the filter runs at priority 10 and requires the $load_layouts array to be passed.
 //
-add_filter( 'LVL99\ACFPageBuilder\Builder\load_layouts', __NAMESPACE__ . '\\load_acfpb_layouts', 11, 1 );
+add_filter( 'LVL99\BlockPress\Builder\load_layouts', __NAMESPACE__ . '\\load_acfpb_layouts', 11, 1 );
 
 //
 // Loading the custom blocks is practically the same as the custom layouts.
@@ -86,7 +86,7 @@ function load_acfpb_blocks ( $load_blocks )
 
   return $load_blocks;
 }
-add_filter( 'LVL99\ACFPageBuilder\Builder\load_blocks', __NAMESPACE__ . '\\load_acfpb_blocks', 11, 1 );
+add_filter( 'LVL99\BlockPress\Builder\load_blocks', __NAMESPACE__ . '\\load_acfpb_blocks', 11, 1 );
 
 //
 // That's it!

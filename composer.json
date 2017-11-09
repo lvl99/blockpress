@@ -1,8 +1,8 @@
 {
-  "name": "lvl99/acf-page-builder",
-  "description": "Define and build custom post/page layouts for your ACF-powered WordPress website",
-  "homepage": "https://github.com/lvl99/acf-page-builder",
-  "version": "0.2.1",
+  "name": "lvl99/blockpress",
+  "description": "Define and build custom post/page layouts with reusable blocks for your ACF-powered WordPress website",
+  "homepage": "https://github.com/lvl99/blockpress",
+  "version": "0.2.2",
   "type": "wordpress-plugin",
   "license": "MIT",
   "authors": [
@@ -12,8 +12,6 @@
     }
   ],
   "require": {
-    "php": ">= 7.0",
-    "composer/installers": "^1.4",
-    "twig/twig": "^2.4"
+    "php": ">= 7.0"
   }
 }

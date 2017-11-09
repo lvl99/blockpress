@@ -1,9 +1,9 @@
 <?php
 /**
- * ACF Page Builder
+ * ACF BlockPress
  */
 
-namespace LVL99\ACFPageBuilder;
+namespace LVL99\BlockPress;
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
@@ -18,15 +18,15 @@ class Builder extends Entity {
   /**
    * @var string
    */
-  public $label = 'LVL99 ACF Page Builder';
+  public $label = 'BlockPress';
 
   /**
    * @var string
    */
-  public $description = 'Use LVL99 ACF Page Builder to create custom page/post content layouts';
+  public $description = 'Use BlockPress to create custom page/post content layouts';
 
   /**
-   * The Page Builder settings
+   * The BlockPress settings
    *
    * @var array
    */
@@ -99,17 +99,7 @@ class Builder extends Entity {
   ];
 
   /**
-   * Twig environment for loading twig templates
-   */
-  protected $_twig_env = NULL;
-
-  /**
-   * Twig renderer
-   */
-  protected $_twig = NULL;
-
-  /**
-   * Collection of validated view folders (used by both Twig and PHP rendering)
+   * Collection of validated (they exist) view folders
    *
    * @type array
    */
@@ -150,53 +140,18 @@ class Builder extends Entity {
    */
   public function initialise ( $options = [] )
   {
-    // @TODO refactor to WP Options API
+    // @TODO refactor to WP Options API?
     $this->settings = wp_parse_args( $options, [
       /**
-       * The supported post types that can show the Page Builder in the backend
+       * The supported post types that can show BlockPress in the backend
        *
-       * @hook LVL99\ACFPageBuilder\Builder\default_settings\post_types
+       * @hook LVL99\BlockPress\Builder\default_settings\post_types
        * @param array
        * @returns array
        */
-      'post_types' => apply_filters( 'LVL99\ACFPageBuilder\Builder\default_settings\post_types', [
+      'post_types' => apply_filters( 'LVL99\BlockPress\Builder\default_settings\post_types', [
         'post',
         'page',
-      ] ),
-
-      // Enable Twig rendering
-      /**
-       * Enable Twig rendering
-       *
-       * @hook LVL99\ACFPageBuilder\Builder\default_settings\twig
-       * @param bool
-       * @returns bool
-       */
-      'twig' => apply_filters( 'LVL99\ACFPageBuilder\Builder\default_settings\twig', TRUE ),
-
-      /**
-       * The paths to where Twig views could be located ordered by highest priority first
-       *
-       * @hook LVL99\ACFPageBuilder\Builder\default_settings\twig_views
-       * @param array
-       * @returns array
-       */
-      'twig_views' => apply_filters( 'LVL99\ACFPageBuilder\Builder\default_settings\twig_views', [
-        LVL99_ACF_PAGE_BUILDER_PATH . '/views/blocks',
-        LVL99_ACF_PAGE_BUILDER_PATH . '/views/layouts',
-      ] ),
-
-      /**
-       * Extra options to pass to the Twig environment
-       *
-       * @hook LVL99\ACFPageBuilder\Builder\default_settings\twig_options
-       * @param array
-       * @param Builder $this
-       * @returns array
-       */
-      'twig_options' => apply_filters( 'LVL99\ACFPageBuilder\Builder\default_settings\twig_options', [
-        'debug' => TRUE,
-        'cache' => get_temp_dir() . '/cache/lvl99-acfpb',
       ] ),
 
       /**
@@ -204,31 +159,31 @@ class Builder extends Entity {
        *
        * IMPORTANT: lots of plugins use `the_content` filter other than display the post's content. Use with caution...
        *
-       * @hook LVL99\ACFPageBuilder\Builder\default_settings\use_render_hooks
+       * @hook LVL99\BlockPress\Builder\default_settings\use_render_hooks
        * @param bool
        * @returns bool
        */
-      'use_render_hooks' => apply_filters( 'LVL99\ACFPageBuilder\Builder\default_settings\use_render_hooks', FALSE ),
+      'use_render_hooks' => apply_filters( 'LVL99\BlockPress\Builder\default_settings\use_render_hooks', FALSE ),
 
       /**
        * Use cache features when processing builder data and rendering layouts/blocks
        * You can use the cache busting query var `?acfpb_builder_reload_cache=1` to bust the cache
        *
-       * @hook LVL99\ACFPageBuilder\Builder\default_settings\use_cache
+       * @hook LVL99\BlockPress\Builder\default_settings\use_cache
        * @param bool
        * @returns bool
        */
-      'use_cache' => apply_filters( 'LVL99\ACFPageBuilder\Builder\default_settings\use_cache', ( defined( 'WP_CACHE' ) ? WP_CACHE : TRUE ) ),
+      'use_cache' => apply_filters( 'LVL99\BlockPress\Builder\default_settings\use_cache', ( defined( 'WP_CACHE' ) ? WP_CACHE : TRUE ) ),
     ] );
 
     /**
      * Change the settings after loading defaults
      *
-     * @hook LVL99\ACFPageBuilder\Builder\settings
+     * @hook LVL99\BlockPress\Builder\settings
      * @param array
      * @returns array
      */
-    $this->settings = apply_filters( 'LVL99\ACFPageBuilder\Builder\settings', $this->settings );
+    $this->settings = apply_filters( 'LVL99\BlockPress\Builder\settings', $this->settings );
 
     // Set status of Builder loading and initialisation process
     $this->settings['_file'] = __FILE__;
@@ -249,7 +204,6 @@ class Builder extends Entity {
     $this->settings['_initialising'] = TRUE;
     $this->initialise_blocks();
     $this->initialise_layouts();
-    $this->initialise_twig();
 
     // Generate the ACF config to set up the backend with
     $this->generate_acf();
@@ -279,11 +233,11 @@ class Builder extends Entity {
     $_key = $this->get_key();
 
     /**
-     * @hook LVL99\ACFPageBuilder\Builder\load_blocks
+     * @hook LVL99\BlockPress\Builder\load_blocks
      * @param array $load_blocks An associative array of all the blocks to load into the builder
      * @returns array
      */
-    $_load_blocks = apply_filters( 'LVL99\ACFPageBuilder\Builder\load_blocks', [] );
+    $_load_blocks = apply_filters( 'LVL99\BlockPress\Builder\load_blocks', [] );
     $_loaded_blocks = [];
 
     foreach ( $_load_blocks as $block_name => $block_data )
@@ -321,11 +275,11 @@ class Builder extends Entity {
     $_key = $this->get_key();
 
     /**
-     * @filter LVL99\ACFPageBuilder\Builder\load_layouts
+     * @filter LVL99\BlockPress\Builder\load_layouts
      * @param array $load_layouts An associative array of all the layouts to load into the builder
      * @returns array
      */
-    $_load_layouts = apply_filters( 'LVL99\ACFPageBuilder\Builder\load_layouts', [] );
+    $_load_layouts = apply_filters( 'LVL99\BlockPress\Builder\load_layouts', [] );
     $_loaded_layouts = [];
 
     foreach ( $_load_layouts as $layout_name => $layout_data )
@@ -361,7 +315,7 @@ class Builder extends Entity {
   }
 
   /**
-   * Test the view folders to see which ones are valid to enable using in the Twig loader
+   * Test the view folders to see which ones are valid
    *
    * @protected
    */
@@ -370,11 +324,11 @@ class Builder extends Entity {
     /**
      * The potential locations that views could exist in
      *
-     * @hook LVL99\ACFPageBuilder\Builder\load_view_folders
+     * @hook LVL99\BlockPress\Builder\load_view_folders
      * @param array $view_dirs
      * @returns array
      */
-    $view_folders = apply_filters( 'LVL99\ACFPageBuilder\Builder\load_view_folders', [
+    $view_folders = apply_filters( 'LVL99\BlockPress\Builder\load_view_folders', [
       // @TODO might need to support child themes?
       'layout' => [
         get_template_directory() . '/views/layouts',
@@ -396,10 +350,10 @@ class Builder extends Entity {
     }
 
     // Always add plugin's folders to fall back on
-    $view_folders['layout'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/layouts';
-    $view_folders['layout'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views';
-    $view_folders['block'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views/blocks';
-    $view_folders['block'][] = LVL99_ACF_PAGE_BUILDER_PATH . '/views';
+    $view_folders['layout'][] = LVL99_BLOCKPRESS_PATH . '/views/layouts';
+    $view_folders['layout'][] = LVL99_BLOCKPRESS_PATH . '/views';
+    $view_folders['block'][] = LVL99_BLOCKPRESS_PATH . '/views/blocks';
+    $view_folders['block'][] = LVL99_BLOCKPRESS_PATH . '/views';
 
     // Check that the paths are valid and exist
     $valid_view_folders = [
@@ -419,47 +373,6 @@ class Builder extends Entity {
 
     // Save the validated view folders into the instance
     $this->_view_folders = $valid_view_folders;
-  }
-
-  /**
-   * Initialise Twig renderer and its loaders
-   */
-  protected function initialise_twig ()
-  {
-    // Load and initialise Twig (if not already initialised
-    if ( $this->settings['twig'] && empty( $this->_twig ) && empty( $this->_twig_env ) )
-    {
-      // Load in Composer dependencies with Twig only if Twig isn't already loaded (WPML already loads in Twig)
-      if ( ! class_exists( '\\Twig_Environment' ) )
-      {
-        $autoloader = LVL99_ACF_PAGE_BUILDER_PATH . '/vendor/autoload.php';
-        if ( version_compare( PHP_VERSION, '5.3.0' ) < 0 ) {
-          $autoloader = LVL99_ACF_PAGE_BUILDER_PATH . '/vendor/autoload_52.php';
-        }
-        require_once $autoloader;
-      }
-
-      // Use the custom loader to be able to load from absolute paths
-      require_once LVL99_ACF_PAGE_BUILDER_PATH . '/classes/twig/class.twig-loader-abspath.php';
-
-      // Instantiate Twig loader and renderer
-      // -- Here's the regular Twig loader which is relative to the filesystem (will check through all the validated
-      //    view folders to find a view that matches)
-      $twig_filesystem_loader = new \Twig_Loader_Filesystem( array_merge( $this->_view_folders['layout'], $this->_view_folders['block'] ) );
-
-      // -- Here's a custom Twig loader to refer to views using absolute paths
-      $twig_abspath_loader = new Twig_Loader_Abspath();
-
-      // -- And this loader chain means we use relative filesystem loader first, then absolute path loader last
-      $this->_twig_env = new \Twig_Loader_Chain([ $twig_filesystem_loader, $twig_abspath_loader ]);
-      $this->_twig = new \Twig_Environment( $this->_twig_env, $this->get_setting( 'twig_options' ) );
-
-      // Add in the debug stuff
-      if ( array_key_exists( 'debug', $this->get_setting( 'twig_options' ) ) && $this->get_setting( 'twig_options' )['debug'] )
-      {
-        $this->_twig->addExtension( new \Twig_Extension_Debug() );
-      }
-    }
   }
 
   /**
@@ -570,7 +483,7 @@ class Builder extends Entity {
     $acfpb_builder_fields = [];
     $acfpb_builder_layouts = [];
 
-    // Allow the Page Builder to only be visible for these post types
+    // Allow BlockPress to only be visible for these post types
     $acfpb_supported_post_types = empty( $this->get_setting( 'post_types' ) );
     if ( empty( $acfpb_supported_post_types ) )
     {
@@ -592,7 +505,7 @@ class Builder extends Entity {
       ];
     }
 
-    // Create a true_false field to mark whether to use the Page Builder or not
+    // Create a true_false field to mark whether to use BlockPress or not
     $acfpb_builder_enabled = generate_acf_field_true_false( [
       'key' => $key . ':enabled',
       'name' => 'acfpb_' . $key . '_enabled',
@@ -650,7 +563,7 @@ class Builder extends Entity {
       $acfpb_builder_fields[] = $acfpb_layout;
     }
 
-    // Generate the full ACF group config for the Page Builder
+    // Generate the full ACF group config for BlockPress
     $acf = generate_acf_group( [
       'key' => $key,
       'title' => $this->get_prop( 'label' ),
@@ -767,28 +680,28 @@ class Builder extends Entity {
   }
 
   /**
-   * Check if the Page Builder is enabled for a post
+   * Check if BlockPress is enabled for a post
    *
    * @param int|string|\WP_Post $post
    * @returns bool
    */
   public function is_enabled ( $post = NULL )
   {
-    $post = get_post( $post );
+    $post = get_wp_post( $post );
     $key = $this->get_key();
     $is_enabled = get_field( 'acfpb_' . $key . '_enabled', $post );
     return $is_enabled;
   }
 
   /**
-   * Get the Page Builder's active layout for a post
+   * Get BlockPress's active layout for a post
    *
    * @param int|string|\WP_Post $post
    * @returns string
    */
   public function get_active_layout ( $post = NULL )
   {
-    $post = get_post( $post );
+    $post = get_wp_post( $post );
     $key = $this->get_key();
     $active_layout = get_field( 'acfpb_' . $key . '_layout', $post );
     return $active_layout;
@@ -798,8 +711,6 @@ class Builder extends Entity {
    * Locate a layout's view file
    *
    * The plugin will look in the active theme's views folder first, then in its own views folder.
-   *
-   * The plugin is setup to use Twig, but you could reference a PHP file if you really want.
    *
    * @param string $layout_name
    * @returns null|string
@@ -816,14 +727,9 @@ class Builder extends Entity {
 
     // Generate potential locations that the view could exist in
     $view_dirs = $this->_view_folders['layout'];
-    $view_filenames = [];
-
-    // Reference twig filenames
-    if ( $this->get_setting( 'twig' ) )
-    {
-      $view_filenames[] = $layout_name . '.twig';
-    }
-    $view_filenames[] = $layout_name . '.php';
+    $view_filenames = [
+      $layout_name . '.php'
+    ];
 
     // Check all potential locations for the view file to be located
     foreach ( $view_dirs as $view_dir )
@@ -852,8 +758,6 @@ class Builder extends Entity {
    *
    * The plugin will look in the active theme's views folder first, then in its own views folder.
    *
-   * The plugin is setup to use Twig, but you could reference a PHP file if you really want.
-   *
    * @param string $block_name
    * @param string $layout_name
    * @returns string
@@ -871,26 +775,14 @@ class Builder extends Entity {
 
     // Generate potential locations that the view could exist in
     $view_dirs = $this->_view_folders['block'];
-    $view_filenames = [];
-
-    // Reference twig filenames
-    if ( $this->get_setting( 'twig' ) )
-    {
-      $view_filenames[] = $block_name . '.twig';
-    }
-    $view_filenames[] = $block_name . '.php';
+    $view_filenames = [
+      $block_name . '.php'
+    ];
 
     // Add extra filenames to check if the layout name was specified as well
     // Supports if you want to have a different view for a block within a specific layout
     if ( ! empty( $layout_name ) )
     {
-      // Reference twig filenames
-      if ( $this->get_setting( 'twig' ) )
-      {
-        $view_filenames[] = $layout_name . '-' . $block_name . '.twig';
-        $view_filenames[] = $layout_name . '_' . $block_name . '.twig';
-        $view_filenames[] = $layout_name . '.' . $block_name . '.twig';
-      }
       $view_filenames[] = $layout_name . '-' . $block_name . '.php';
       $view_filenames[] = $layout_name . '_' . $block_name . '.php';
       $view_filenames[] = $layout_name . '.' . $block_name . '.php';
@@ -917,7 +809,7 @@ class Builder extends Entity {
    * Map a Builder block's data structure from the generated ACF fields
    *
    * The map is a way for the builder to map a block's data/schema to the generate ACF fields. This is used when
-   * getting the ACF meta data from a WP_Post object and then mapping it to the Page Builder's data structure for
+   * getting the ACF meta data from a WP_Post object and then mapping it to BlockPress's data structure for
    * rendering.
    *
    * Mapped fields are stored in the Builder's flatmap.
@@ -1131,7 +1023,7 @@ class Builder extends Entity {
    */
   public function cache_render_data( $post = NULL, $key, $data )
   {
-    $post = get_post( $post );
+    $post = get_wp_post( $post );
     $post_cache_key = $post->post_type . '_' . $post->ID;
 
     $data['_cached_render_data'] = [
@@ -1154,7 +1046,7 @@ class Builder extends Entity {
    */
   public function get_cached_render_data( $post = NULL, $key = '' )
   {
-    $post = get_post( $post );
+    $post = get_wp_post( $post );
 
     // Cache key
     $post_cache_key = $post->post_type . '_' . $post->ID;
@@ -1186,7 +1078,7 @@ class Builder extends Entity {
    */
   public function get_render_data ( $post = NULL, $key = '' )
   {
-    $post = get_post( $post );
+    $post = get_wp_post( $post );
     $render_data = NULL;
     $layout_name = $this->get_active_layout( $post );
 
@@ -1472,7 +1364,7 @@ class Builder extends Entity {
    */
   public function render_layout( $post = NULL, $options = [] )
   {
-    $post = get_post( $post );
+    $post = get_wp_post( $post );
     $layout_view_file = '';
     $rendered_layout = [];
 
@@ -1512,8 +1404,8 @@ class Builder extends Entity {
       $layout_data = [
         '_builder' => [
           'builder' => $this->get_prop( 'name' ),
-          'version' => LVL99_ACF_PAGE_BUILDER,
-          'path' => LVL99_ACF_PAGE_BUILDER_PATH,
+          'version' => LVL99_BLOCKPRESS,
+          'path' => LVL99_BLOCKPRESS_PATH,
           'post' => $post,
           'layout' => $layout_name,
           'layout_slug' => $builder_layout_name,
@@ -1613,7 +1505,7 @@ class Builder extends Entity {
     $rendered_block = '';
 
     // Get the layout/block name
-    $post = get_post( $post );
+    $post = get_wp_post( $post );
     $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
     $layout_name = ( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
     $parent = ( array_key_exists( 'parent', $options ) ? $options['parent'] : '' );
@@ -1647,7 +1539,7 @@ class Builder extends Entity {
     catch (\Exception $e)
     {
       error_log( $e->getMessage() );
-      return '<!-- LVL99 ACF Page Builder - Missing view for block "' . $block_name . '" -->';
+      return '<!-- LVL99 BlockPress - Missing view for block "' . $block_name . '" -->';
     }
 
     return $this->render_view( $block_view_file, $options );
@@ -1667,7 +1559,7 @@ class Builder extends Entity {
     $rendered_view = '';
 
     // Get the post
-    $post = get_post( array_key_exists( 'post', $options ) ? $options['post'] : NULL );
+    $post = get_wp_post( array_key_exists( 'post', $options ) ? $options['post'] : NULL );
 
     // A specific key to the layout/block
     $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
@@ -1767,8 +1659,8 @@ class Builder extends Entity {
       // Overwrite _builder stuff with things related to this render pass
       $data['_builder'] = array_merge( $data['_builder'], [
         'builder' => $this->get_prop( 'name' ),
-        'version' => LVL99_ACF_PAGE_BUILDER,
-        'path' => LVL99_ACF_PAGE_BUILDER_PATH,
+        'version' => LVL99_BLOCKPRESS,
+        'path' => LVL99_BLOCKPRESS_PATH,
         'post' => $post,
         'key' => $key,
         'layout' => $layout_name,
@@ -1782,16 +1674,8 @@ class Builder extends Entity {
         'overwrite_cache' => $_options['overwrite_cache'],
       ] );
 
-      // Render Twig template
-      if ( preg_match( '/\.twig$/i', $view_file ) && $this->get_setting( 'twig' ) )
-      {
-        $rendered_view = $this->render_twig_view( $view_file, $data );
-
-        // Cache the view
-        $this->cache_view( $cache_key, $rendered_view );
-      }
       // Render PHP template
-      else if ( preg_match( '/\.php$/i', $view_file ) )
+      if ( preg_match( '/\.php$/i', $view_file ) )
       {
         $rendered_view = $this->render_php_view( $view_file, $data );
 
@@ -1801,7 +1685,7 @@ class Builder extends Entity {
       // Just in case file can't be found...
       else
       {
-        $error_message = 'LVL99 ACF Page Builder - No view found ';
+        $error_message = 'LVL99 BlockPress - No view found ';
         error_log( $error_message );
         $rendered_view = '<!-- ' . $error_message . ' -->';
       }
@@ -1811,47 +1695,6 @@ class Builder extends Entity {
     if ( array_key_exists( 'output', $options ) && $options['output'] === 'echo' )
     {
       echo $rendered_view;
-    }
-
-    return $rendered_view;
-  }
-
-  /**
-   * Render a Twig view
-   *
-   * @param $file
-   * @param $data
-   * @returns string
-   * @protected
-   */
-  protected function render_twig_view ( $file, $data = [] )
-  {
-    $rendered_view = '';
-
-    // Twig is initialised and the file exists
-    if ( $this->get_setting( 'twig' ) && ! is_null( $this->_twig ) && file_exists( $file ) )
-    {
-      $rendered_view = $this->_twig->render( $file, $data );
-    }
-    // Attempt to render with the PHP version (if it exists)
-    else
-    {
-      // If twig renderer not available, attempt to render via PHP
-      $file = preg_replace( '/\.twig$/i', '.php', $file );
-
-      // Only render if it exists
-      if ( file_exists( $file ) )
-      {
-        $rendered_view = $this->render_php_view( $file, $data );
-      }
-      // Otherwise output an error via HTML comment message
-      else
-      {
-        $safe_file = str_replace( ABSPATH, '', $file );
-        $error_message = 'LVL99 ACF Page Builder - Missing view file:';
-        error_log( $error_message . ' "' . $file . '"' );
-        $rendered_view = '<!-- ' . $error_message . ' "' . $safe_file . '" -->';
-      }
     }
 
     return $rendered_view;
@@ -1884,7 +1727,7 @@ class Builder extends Entity {
     else
     {
       $safe_file = str_replace( ABSPATH, '', $file );
-      $error_message = 'LVL99 ACF Page Builder - Missing view file:';
+      $error_message = 'LVL99 BlockPress - Missing view file:';
       error_log( $error_message . ' "' . $file . '"' );
       $rendered_view = '<!-- ' . $error_message . ' "' . $safe_file . '" -->';
     }
@@ -1901,7 +1744,7 @@ class Builder extends Entity {
   protected function generate_pre_cache_key ( $options = [] )
   {
     // Get the post
-    $post = get_post( array_key_exists( 'post', $options ) ? $options['post'] : NULL );
+    $post = get_wp_post( array_key_exists( 'post', $options ) ? $options['post'] : NULL );
 
     // A specific key to the layout/block
     $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
@@ -2006,9 +1849,9 @@ class Builder extends Entity {
     // @TODO support WP Object cache, or maybe some kind of HTML cache
     if ( ! empty( $cache_key ) && array_key_exists( $cache_key, $this->_views ) )
     {
-      $output = '<!-- BEGIN LVL99 ACF Page Builder - Cached View: ' . $cache_key . ' -->' . "\n";
+      $output = '<!-- BEGIN LVL99 BlockPress - Cached View: ' . $cache_key . ' -->' . "\n";
       $output .= $this->_views[ $cache_key ] . "\n";
-      $output .= '<!-- END LVL99 ACF Page Builder - Cached View: ' . $cache_key . ' -->' . "\n";
+      $output .= '<!-- END LVL99 BlockPress - Cached View: ' . $cache_key . ' -->' . "\n";
       return $output;
     }
 
@@ -2016,7 +1859,7 @@ class Builder extends Entity {
   }
 
   /**
-   * Setup the filters that the Page Builder can apply to
+   * Setup the filters that BlockPress can apply to
    */
   protected function setup_filters ()
   {
@@ -2027,7 +1870,7 @@ class Builder extends Entity {
   }
 
   /**
-   * Fetch the global post's content. If a post has Page Builder enabled, then this will bypass WordPress's
+   * Fetch the global post's content. If a post has BlockPress enabled, then this will bypass WordPress's
    * `the_content` filter.
    *
    * There's a lot of issues with this approach. #1 is that because this filter doesn't specify the post of which to
@@ -2042,9 +1885,9 @@ class Builder extends Entity {
    */
   public function filter_the_content ( $content = '' )
   {
-    $post = get_post();
+    $post = get_wp_post();
 
-    // Return the rendered layout content if Page Builder is enabled
+    // Return the rendered layout content if BlockPress is enabled
     if ( $this->is_enabled( $post ) )
     {
       // If post password required and it doesn't match the cookie.
@@ -2080,9 +1923,9 @@ class Builder extends Entity {
    */
   public function filter_the_content_feed ( $content = '', $feed_type = '', $post = NULL )
   {
-    $post = get_post( $post );
+    $post = get_wp_post( $post );
 
-    // Return the rendered layout content if Page Builder is enabled
+    // Return the rendered layout content if BlockPress is enabled
     if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
     {
       $content = $this->render_layout( $post );
@@ -2101,7 +1944,7 @@ class Builder extends Entity {
   }
 
   /**
-   * Fetch a (specified) post's excerpt. If a post has Page Builder enabled, then this will bypass WordPress's
+   * Fetch a (specified) post's excerpt. If a post has BlockPress enabled, then this will bypass WordPress's
    * `get_the_excerpt` filter.
    *
    * Thankfully this one specifies a post from which to get the excerpt from...
@@ -2113,7 +1956,7 @@ class Builder extends Entity {
    */
   public function filter_get_the_excerpt ( $excerpt = '', $post = NULL )
   {
-    $post = get_post( $post );
+    $post = get_wp_post( $post );
 
     // If post password required and it doesn't match the cookie.
     if ( post_password_required( $post ) )
@@ -2121,7 +1964,7 @@ class Builder extends Entity {
       return __( 'There is no excerpt because this is a protected post.' );
     }
 
-    // Return the rendered layout content if Page Builder is enabled
+    // Return the rendered layout content if BlockPress is enabled
     if ( empty( $excerpt ) && is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
     {
       // Check if already has an excerpt, if so use that
@@ -2155,7 +1998,7 @@ class Builder extends Entity {
   }
 
   /**
-   * Fetch the post's excerpt. If a post has Page Builder enabled, then this will bypass WordPress's
+   * Fetch the post's excerpt. If a post has BlockPress enabled, then this will bypass WordPress's
    * `the_excerpt_rss` filter.
    *
    * @hook the_excerpt_rss
@@ -2164,9 +2007,9 @@ class Builder extends Entity {
    */
   public function filter_the_excerpt_rss ( $excerpt = '', $post = NULL )
   {
-    $post = get_post( $post );
+    $post = get_wp_post( $post );
 
-    // Return the rendered layout excerpt if Page Builder is enabled
+    // Return the rendered layout excerpt if BlockPress is enabled
     if ( is_a( $post, 'WP_Post' ) && $this->is_enabled( $post ) )
     {
       $excerpt = $this->filter_get_the_excerpt( $excerpt, $post );

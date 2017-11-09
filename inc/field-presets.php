@@ -5,7 +5,7 @@
  * A bunch of convenience functions to generate re-usable fields
  */
 
-namespace LVL99\ACFPageBuilder;
+namespace LVL99\BlockPress;
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly

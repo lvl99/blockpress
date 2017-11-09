@@ -3,7 +3,7 @@
  * General helper functions
  */
 
-namespace LVL99\ACFPageBuilder;
+namespace LVL99\BlockPress;
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param int
  * @returns \WP_Post
  */
-function get_post ( $post_id = NULL )
+function get_wp_post ( $post_id = NULL )
 {
   global $post;
 
@@ -34,12 +34,12 @@ function get_post ( $post_id = NULL )
     }
     // Get post by slug
     else if ( is_string( $post_id ) ) {
-      return \get_page_by_path( $post_id, OBJECT, lvl99_acf_page_builder()->get_setting( 'post_types' ) );
+      return get_page_by_path( $post_id, OBJECT, blockpress()->get_setting( 'post_types' ) );
     }
     // Get post by ID
     else
     {
-      return \get_post( $post_id );
+      return get_post( $post_id );
     }
   }
   else
@@ -87,13 +87,13 @@ function load_blocks_into_acf_field ( $type, $acf_config, $options = [] )
   if ( ! empty( $options ) && in_array( $type, $allowed_types ) )
   {
     $_options = wp_parse_args( $options, [
-      'builder' => lvl99_acf_page_builder(),
+      'builder' => blockpress(),
     ] );
 
     // A layout must be specified
     if ( ! array_key_exists( 'layout', $_options ) )
     {
-      throw new \Exception( 'LVL99 ACF Page Builder: no layout was specified' );
+      throw new \Exception( 'LVL99 BlockPress: no layout was specified' );
     }
 
     // Get the layout instance
@@ -105,7 +105,7 @@ function load_blocks_into_acf_field ( $type, $acf_config, $options = [] )
     // Error if empty
     else if ( empty( $_options['layout'] ) )
     {
-      throw new \Exception( 'LVL99 ACF Page Builder: no layout name was specified' );
+      throw new \Exception( 'LVL99 BlockPress: no layout name was specified' );
     }
 
     // Get the block instance
@@ -198,7 +198,7 @@ function get_post_acf_field_name_from_key ( $post = NULL, $key )
 {
   global $wpdb;
 
-  $post = get_post( $post );
+  $post = get_wp_post( $post );
   $acf_field_name = $wpdb->get_var( $wpdb->prepare( "SELECT meta_key FROM `$wpdb->postmeta` WHERE post_id = %d AND meta_value = %s LIMIT 1", $post->ID, $key ) );
   if ( is_string( $acf_field_name ) )
   {
@@ -267,7 +267,7 @@ function check_acf_field_to_format_value ( $acf_field_key, $acf_field_value, $ac
             {
               // @TODO check that these fields are always referring to posts
               //       If can refer to taxonomies/terms/other WP entities, then figure it out
-              $item_entity = get_post( $item_id );
+              $item_entity = get_wp_post( $item_id );
 
               // Cast to array
               if ( $requires_special_return_format && $acf['return_format'] === 'array' )
@@ -286,7 +286,7 @@ function check_acf_field_to_format_value ( $acf_field_key, $acf_field_value, $ac
         // Return a singular value
         else
         {
-          $acf_field_value = get_post( $acf_field_value );
+          $acf_field_value = get_wp_post( $acf_field_value );
           if ( $requires_special_return_format && $acf['return_format'] === 'array' )
           {
             $acf_field_value = (array) $acf_field_value;

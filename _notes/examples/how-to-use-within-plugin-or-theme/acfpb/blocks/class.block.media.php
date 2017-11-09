@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Custom Blocks extend the `LVL99\ACFPageBuilder\Block` class (located at `core/class.block.php`)
+ * Custom Blocks extend the `LVL99\BlockPress\Block` class (located at `core/class.block.php`)
  *
  * A Block describes a single flexible content layout field. A block could represent a single image, a collection of
  * paragraphs, a carousel of multiple images, etc.
@@ -24,9 +24,9 @@
 namespace My_Cool_Theme;
 
 //
-// Since the LVL99 ACF Page Builder has been nicely namespaced, we can use and set a shorthand alias here.
+// Since the LVL99 BlockPress has been nicely namespaced, we can use and set a shorthand alias here.
 //
-use LVL99\ACFPageBuilder as ACFPageBuilder;
+use LVL99\BlockPress as BlockPress;
 
 //
 // WordPress security best practices
@@ -34,17 +34,17 @@ use LVL99\ACFPageBuilder as ACFPageBuilder;
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 //
-// When creating a custom block, you'll need to extend the Page Builder's core Block class.
+// When creating a custom block, you'll need to extend BlockPress's core Block class.
 //
 // You can always refer to the `core/class.block.php` file to see what specific information blocks support.
 //
-class BlockMedia extends ACFPageBuilder\Block {
+class BlockMedia extends BlockPress\Block {
   //
   // Just like in custom layouts, we need to specify a human/machine-readable name. This name will be used in array
   // keys and within templates. Think of it as a `slug`, like setting a post's URL slug, where characters are
   // lower-case and no special characters except for underscores and hyphens are allowed.
   //
-  // This block `slug` should be exactly the same as the block's array key when loading it into Page Builder.
+  // This block `slug` should be exactly the same as the block's array key when loading it into BlockPress.
   //
   public $name = 'mct_media';
 
@@ -162,7 +162,7 @@ class BlockMedia extends ACFPageBuilder\Block {
         //
         // This is essentially where we get "funky".
         //
-        // The ACF Page Builder contains a bunch of helper functions that we can use to generate preset fields.
+        // The ACF BlockPress contains a bunch of helper functions that we can use to generate preset fields.
         //
         // Because I'm so well organised with namespaces, we'll need to put the namespace as well as the function
         // name to call.
@@ -170,7 +170,7 @@ class BlockMedia extends ACFPageBuilder\Block {
         // The function `field_bg_color` is located in the `helpers/presets.php` file. It basically creates an array
         // detailing a color picker that will configure the background color for this block.
         //
-        'func' => 'LVL99\\ACFPageBuilder\\field_bg_color',
+        'func' => 'LVL99\\BlockPress\\field_bg_color',
 
         //
         // If we had any arguments to pass to this function, we would put them in a property named `args`.

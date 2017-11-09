@@ -1,11 +1,11 @@
 <?php
 /**
- * ACF Page Builder - Admin
+ * ACF BlockPress - Admin
  *
- * Manage the Page Builder via the WordPress admin backend
+ * Manage BlockPress via the WordPress admin backend
  */
 
-namespace LVL99\ACFPageBuilder;
+namespace LVL99\BlockPress;
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( defined( 'ICL_SITEPRESS_VERSION') )
 {
-  require_once( LVL99_ACF_PAGE_BUILDER_PATH . '/classes/admin/class.wpml.php' );
+  require_once( LVL99_BLOCKPRESS_PATH . '/classes/admin/class.wpml.php' );
 }
 
 class Admin {
@@ -38,7 +38,7 @@ class Admin {
   public function __construct ( $builder )
   {
     // Generate the WPML config
-    if ( class_exists( '\LVL99\ACFPageBuilder\WPML' ) )
+    if ( class_exists( '\LVL99\BlockPress\WPML' ) )
     {
       $this->wpml = new WPML( $builder );
       add_filter( 'wpml_config_array', [ $this->wpml, 'wpml_config' ] );
@@ -71,7 +71,7 @@ class Admin {
 //      // If not already loaded, load and parse the ACF config
 //      if ( ! $this->wpml->has_loaded_config() )
 //      {
-//        $this->wpml->parse_builder( lvl99_acf_page_builder() );
+//        $this->wpml->parse_builder( blockpress() );
 //      }
 //
 //      return $this->wpml->get_config( 'wpml' );

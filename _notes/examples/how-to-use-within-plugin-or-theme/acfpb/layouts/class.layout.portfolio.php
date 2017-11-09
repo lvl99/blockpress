@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Layouts extend the `LVL99\ACFPageBuilder\Layout` class (located at `core/class.layout.php`)
+ * Layouts extend the `LVL99\BlockPress\Layout` class (located at `core/class.layout.php`)
  *
  * Layouts describe a single flexible content ACF field.
  *
@@ -16,9 +16,9 @@
 namespace My_Cool_Theme;
 
 //
-// Since the LVL99 ACF Page Builder has been nicely namespaced, we can use and set a shorthand alias here.
+// Since the LVL99 BlockPress has been nicely namespaced, we can use and set a shorthand alias here.
 //
-use LVL99\ACFPageBuilder as ACFPageBuilder;
+use LVL99\BlockPress as BlockPress;
 
 //
 // WordPress security best practices
@@ -26,11 +26,11 @@ use LVL99\ACFPageBuilder as ACFPageBuilder;
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 //
-// When creating a custom layout, you'll need to extend the Page Builder's core Layout class.
+// When creating a custom layout, you'll need to extend BlockPress's core Layout class.
 //
 // You can always reference the `core/class.layout.php` to see what specific information layouts support.
 //
-class LayoutPortfolio extends ACFPageBuilder\Layout {
+class LayoutPortfolio extends BlockPress\Layout {
   //
   // For the most part Layout classes are very basic.
   //
@@ -38,7 +38,7 @@ class LayoutPortfolio extends ACFPageBuilder\Layout {
   // Think of it as a `slug`, like setting a post's URL slug, where characters are lower-case and no special characters
   // except for underscores and hyphens are allowed.
   //
-  // This layout `slug` should be exactly the same as the layout's array key when loading it into Page Builder.
+  // This layout `slug` should be exactly the same as the layout's array key when loading it into BlockPress.
   //
   public $name = 'mct_portfolio';
 
@@ -67,7 +67,7 @@ class LayoutPortfolio extends ACFPageBuilder\Layout {
   // We can control what types of blocks users can create in this layout. This allows some kind of finite control
   // for pages/posts that may only need or require a few block types.
   //
-  // If this is empty, then it will support all blocks that have been loaded into the Page Builder. Since the Page
+  // If this is empty, then it will support all blocks that have been loaded into BlockPress. Since the Page
   // Builder generates the ACF configuration on the fly, it is sensible to limit what blocks are supported for
   // speed and optimisation's sake.
   //

@@ -1,11 +1,11 @@
 <?php
 /**
- * ACF Page Builder - Block
+ * ACF BlockPress - Block
  *
  * Represents a single layout item within a "Flexible Content" field
  */
 
-namespace LVL99\ACFPageBuilder;
+namespace LVL99\BlockPress;
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
@@ -193,7 +193,7 @@ class Block extends Entity {
 
     if ( empty( $_options['layout'] ) )
     {
-      throw new \Exception( 'LVL99 ACF Page Builder: options `layout` value cannot be empty' );
+      throw new \Exception( 'LVL99 BlockPress: options `layout` value cannot be empty' );
     }
 
     // Generate all the fields for this block
@@ -265,7 +265,7 @@ class Block extends Entity {
     }
 
     // Generate the basic config for the block
-    $_acf = generate_acf_page_builder_block( [
+    $_acf = generate_bp_block( [
       'key' => $_key,
       'name' => $this->get_prop( 'name' ),
       'label' => $this->get_prop( 'label' ),

@@ -1,8 +1,10 @@
-# LVL99 ACF Page Builder
+# BlockPress
 
-v0.2.1
+v0.2.2
 
 By Matt Scheurich <matt@lvl99.com>
+
+*Previously named ACF Page Builder, now renamed to BlockPress since there was already another plugin with that name*
 
 This is currently a proof of concept using [ACF](http://www.advancedcustomfields.com) and its flexible content field
 as a way to layout a page's content beyond using the basic text editor.
@@ -19,8 +21,9 @@ I've extensively tried out Visual Composer, Divi Builder, and Gutenberg:
   - Same as above for Divi builder, but they've gone bat-sh*t on some of their CSS architecture which makes it
     completely unusable, no matter how nice the frontend/backend editor is (really, it is nice -- and a real shame it's
     unusable in custom themes);
-  - Gutenberg is half-baked and even worse they're baking in bad architecture. The HTML comment demarcation is not an
-    elegant solution, however the editor UX and IA is mostly nice.
+  - Gutenberg is half-baked and even worse they're baking in bad architecture (why HTML comments?). The HTML comment
+    demarcation is not an elegant solution, however the editor UX and IA is mostly nice. Granted, perhaps using ACF
+    isn't great here (already had issues with 50+ custom fields per post), but that's what I'm experimenting with
 
 The funny thing is that the customisation that ACF provides with all its supported fields (and ecosystem), and
 especially the flexible content field, can be worked into a workable layout system which could have some interesting
@@ -48,14 +51,14 @@ Want to try this experimental plugin out quickly? If you use composer, add this 
 ```json
   {
     "type": "vcs",
-    "url": "https://github.com/lvl99/acf-page-builder"
+    "url": "https://github.com/lvl99/blockpress"
   }
 ```
 
-You can then `composer require lvl99/acf-page-builder` to integrate it with your project and then enable the plugin
+You can then `composer require lvl99/blockpress` to integrate it with your project and then enable the plugin
 in the WordPress admin area.
 
-Otherwise just download a ZIP from github: https://github.com/lvl99/acf-page-builder/archive/master.zip
+Otherwise just download a ZIP from github: https://github.com/lvl99/blockpress/archive/master.zip
 
 
 ## Roadmap
@@ -71,7 +74,7 @@ This is a basic plan for features.
 ### v0.2.0
   - [x] Figure out how to render layouts easily in templates 
     - [x] Establish consistent array/object schema format for referring to a block's field values
-    - ~~[x] Add in support for Twig rendering language, just coz I like it (but I might remove it)~~ Scheduled for removal
+    - ~~[x] Add in support for Twig rendering language, just coz I like it (but I might remove it)~~ Removed!
   - [x] Create filter for `the_content` which pulls in all the layout meta data to render
   - [x] Create filter for `the_excerpt` which pulls in all the layout meta data to render with HTML stripped out
   - [x] Caching (rendered views and retrieving/formatting data)

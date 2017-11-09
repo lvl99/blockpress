@@ -1,6 +1,6 @@
 /**
  * This is a draft JSON schema (presented in JS to support comments) for editor apps to use the layout and block
- * data provided by the ACF Page Builder
+ * data provided by the ACF BlockPress
  *
  * @author Matt Scheurich <matt@lvl99.com>
  * @date 2017-09-10

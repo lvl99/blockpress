@@ -679,7 +679,7 @@ if( function_exists('acf_add_local_field_group') ):
   acf_add_local_field_group(array (
     // Each group's key needs to have a "group_" prefix
     'key' => 'group_59afc1e840924',
-    'title' => 'Page Builder',
+    'title' => 'BlockPress',
     'fields' => array (
       array (
         'key' => 'field_59afc1f603ec5',

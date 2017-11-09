@@ -1,11 +1,11 @@
 <?php
 /**
- * ACF Page Builder - Layout
+ * ACF BlockPress - Layout
  *
  * Represents a field group that can affect a post type's `post_content`
  */
 
-namespace LVL99\ACFPageBuilder;
+namespace LVL99\BlockPress;
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
@@ -105,7 +105,7 @@ class Layout extends Entity {
     $_options['blocks'] = $this->get_blocks();
 
     // Build the ACF fields for the layout blocks
-    $acf_layout = generate_acf_page_builder_layout( [
+    $acf_layout = generate_bp_layout( [
       'key' => $_key,
       'name' => $_options['layout_slug'],
       'label' => $this->get_prop( 'label' ),

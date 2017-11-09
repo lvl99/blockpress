@@ -13,3 +13,5 @@ Here I'm collecting notes for what I wish ACF did slightly differently.
     referring to flexible content layout fields which shares the same key but at different row index)
   - I wish I could get flexible content layout field values as formatted values, e.g. an image field will return the
     image's ID, even if `return_format` is set to `array`.
+  - WPML's config structure relies on known custom field names. When using `flexible_content` and `repeater` fields,
+    the convenience of WPML and ACF interop gets thrown out the window. 

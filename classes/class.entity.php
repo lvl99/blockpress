@@ -1,11 +1,11 @@
 <?php
 /**
- * ACF Page Builder - Entity
+ * ACF BlockPress - Entity
  *
- * Represents a generic entity in Page Builder
+ * Represents a generic entity in BlockPress
  */
 
-namespace LVL99\ACFPageBuilder;
+namespace LVL99\BlockPress;
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
@@ -234,7 +234,7 @@ class Entity {
   public function register_block ( $block_name, $options = [] )
   {
     $_options = wp_parse_args( $options, [
-      'builder' => lvl99_acf_page_builder(),
+      'builder' => blockpress(),
     ]);
 
     $this->_blocks[ $block_name ] = $_options['builder']->get_block_instance( $block_name );
@@ -278,7 +278,7 @@ class Entity {
   public function initialise_blocks ( $blocks = [], $options = [] )
   {
     $_options = wp_parse_args( $options, [
-      'builder' => lvl99_acf_page_builder(),
+      'builder' => blockpress(),
     ]);
 
     // If no blocks given, check the entity for any blocks
@@ -329,7 +329,7 @@ class Entity {
   public function register_layout ( $layout_name, $options = [] )
   {
     $_options = wp_parse_args( $options, [
-      'builder' => lvl99_acf_page_builder(),
+      'builder' => blockpress(),
     ]);
 
     $this->_layouts[ $layout_name ] = $_options['builder']->get_layout_instance( $layout_name );
@@ -373,7 +373,7 @@ class Entity {
   public function initialise_layouts ( $layouts = [], $options = [] )
   {
     $_options = wp_parse_args( $options, [
-      'builder' => lvl99_acf_page_builder(),
+      'builder' => blockpress(),
     ]);
 
     // If no layouts given, register all of the layouts to use within this entity

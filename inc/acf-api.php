@@ -3,7 +3,7 @@
  * ACF helpers
  */
 
-namespace LVL99\ACFPageBuilder;
+namespace LVL99\BlockPress;
 
 global $_acfpb_field_key_index;
 
@@ -742,14 +742,14 @@ function generate_acf_flexible_content_layout ( $acf_config, $options = [] )
   return $_layout;
 }
 
-function generate_acf_page_builder_layout ( $acf_config, $options = [] )
+function generate_bp_layout ( $acf_config, $options = [] )
 {
   $_field = generate_acf_field( 'flexible_content', $acf_config, $options );
   return $_field;
 }
 
 // Essentially the same as `generate_acf_flexible_content_layout` just with a different key denomination
-function generate_acf_page_builder_block ( $acf_config, $options = [] )
+function generate_bp_block ( $acf_config, $options = [] )
 {
   $_block = array_merge( [
     'key' => uniqid(),
