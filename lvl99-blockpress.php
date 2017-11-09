@@ -2,7 +2,7 @@
 /*
 Plugin Name: LVL99 BlockPress
 Plugin URI: https://github.com/lvl99/blockpress
-Description: Define and build custom post/page layouts with reusable blocks for your ACF-powered WordPress website
+Description: Define and build custom content layouts with reusable blocks for your ACF-powered WordPress website
 Author: Matt Scheurich
 Author URI: http://lvl99.com/
 Text Domain: lvl99-acfpb
@@ -14,7 +14,7 @@ Version: 0.2.2
  *
  * v0.2.2
  *
- * Create rich page layouts using ACF PRO. No need for Gutenberg, Divi Builder or Visual Composer! ... well, hopefully...
+ * Create rich content layouts using ACF PRO. No need for Gutenberg, Divi Builder or Visual Composer! ... well, hopefully...
  *
  * - Create re-usable blocks: text, image, carousel, columns, etc.
  * - Customise the blocks in your layout with minimal markup and using your own theme's classes and conventions.
