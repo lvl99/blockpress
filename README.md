@@ -4,7 +4,7 @@ v0.2.2
 
 By Matt Scheurich <matt@lvl99.com>
 
-*Previously named ACF Page Builder, now renamed to BlockPress since there was already another plugin with that name*
+> *Previously named ACF Page Builder, now renamed to BlockPress since there was already another plugin with the old name*
 
 This is currently a proof of concept using [ACF](http://www.advancedcustomfields.com) and its flexible content field
 as a way to layout a page's content beyond using the basic text editor.
@@ -21,14 +21,14 @@ I've extensively tried out Visual Composer, Divi Builder, and Gutenberg:
   - Same as above for Divi builder, but they've gone bat-sh*t on some of their CSS architecture which makes it
     completely unusable, no matter how nice the frontend/backend editor is (really, it is nice -- and a real shame it's
     unusable in custom themes);
-  - Gutenberg is half-baked and even worse they're baking in bad architecture (why HTML comments?). The HTML comment
-    demarcation is not an elegant solution, however the editor UX and IA is mostly nice. Granted, perhaps using ACF
-    isn't great here (already had issues with 50+ custom fields per post), but that's what I'm experimenting with
+  - Gutenberg is half-baked and even worse they're baking in bad architecture. The HTML comment demarcation is not an
+    elegant solution, however the editor UX and IA is mostly nice. Granted, perhaps using ACF isn't great here (already
+    had issues with 50+ custom fields per post), but that's what I'm experimenting with.
 
 The funny thing is that the customisation that ACF provides with all its supported fields (and ecosystem), and
 especially the flexible content field, can be worked into a workable layout system which could have some interesting
 applications in both the backend and frontend.
- 
+
 While ACF provides a rudimentary backend solution to render the fields for entering and managing data, it could easily
 be expanded upon its strong foundation of post meta data to potentially fuel an integrated client-side editor on the
 backend and frontend.
@@ -74,16 +74,18 @@ This is a basic plan for features.
 ### v0.2.0
   - [x] Figure out how to render layouts easily in templates 
     - [x] Establish consistent array/object schema format for referring to a block's field values
-    - ~~[x] Add in support for Twig rendering language, just coz I like it (but I might remove it)~~ Removed!
+    - [x] ~~Add in support for Twig rendering language, just coz I like it (but I might remove it)~~ Removed!
   - [x] Create filter for `the_content` which pulls in all the layout meta data to render
   - [x] Create filter for `the_excerpt` which pulls in all the layout meta data to render with HTML stripped out
   - [x] Caching (rendered views and retrieving/formatting data)
 
-### v0.3.0
+### v0.3.0 
+  - [ ] WPML support
   - [ ] Create/research REST JSON API to fuel a frontend editor app
+  - [ ] Significant refactors to lots of core features (see [IMPROVEMENTS](IMPROVEMENTS.md))
   
 ### v0.4.0
-  - [ ] Create saved templates which are a pre-configured layout with blocks for easily creating new pages
+  - [ ] Create saved templates which are a pre-configured layout with blocks or individual blocks to add to layouts
 
 ### v0.5.0
   - [ ] Investigate existing editors to potentially integrate into frontend editor: CKeditor, maybe?
@@ -95,8 +97,7 @@ happen to the code and the API.
 
 ## Contributing
 
-Interested in contributing to design or development? You can fork and make pull requests (there's only one branch at the
-moment anyway).
+Interested in contributing to design or development? You can fork and make pull requests.
 
 I have a private Slack setup too if anyone wants to take part in real-time discussion. You can email <matt@lvl99.com>
 for an invite. 
