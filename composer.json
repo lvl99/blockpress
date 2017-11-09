@@ -2,7 +2,7 @@
   "name": "lvl99/blockpress",
   "description": "Define and build custom content layouts with reusable blocks for your ACF-powered WordPress website",
   "homepage": "https://github.com/lvl99/blockpress",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "type": "wordpress-plugin",
   "license": "MIT",
   "authors": [
