@@ -1,6 +1,6 @@
 # BlockPress
 
-v0.2.2
+v0.3.0
 
 By Matt Scheurich <matt@lvl99.com>
 
@@ -80,6 +80,7 @@ This is a basic plan for features:
   - [x] Caching (rendered views and retrieving/formatting data)
 
 ### v0.3.0 
+  - [ ] ~~Rename from "ACF Page Layout" to "BlockPress"~~
   - [ ] WPML support
   - [ ] Create/research REST JSON API to fuel a frontend editor app
   - [ ] Significant refactors to lots of core features (see [IMPROVEMENTS](IMPROVEMENTS.md))

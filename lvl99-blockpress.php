@@ -6,13 +6,11 @@ Description: Define and build custom content layouts with reusable blocks for yo
 Author: Matt Scheurich
 Author URI: http://lvl99.com/
 Text Domain: lvl99-acfpb
-Version: 0.2.2
+Version: 0.3.0
 */
 
 /**
  * # LVL99 BlockPress
- *
- * v0.2.2
  *
  * Create rich content layouts using ACF PRO. No need for Gutenberg, Divi Builder or Visual Composer! ... well, hopefully...
  *
@@ -32,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! function_exists( 'blockpress' ) && ! class_exists( 'LVL99\\BlockPress\\Builder' ) )
 {
-  define( 'LVL99_BLOCKPRESS', '0.2.1' );
+  define( 'LVL99_BLOCKPRESS', '0.3.0' );
   define( 'LVL99_BLOCKPRESS_PATH', __DIR__ );
 
   // Dependencies
