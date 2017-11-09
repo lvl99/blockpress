@@ -63,7 +63,7 @@ Otherwise just download a ZIP from github: https://github.com/lvl99/blockpress/a
 
 ## Roadmap
 
-This is a basic plan for features.
+This is a basic plan for features:
 
 ### v0.1.0
   - [x] Basic architecture of generating ACF configuration for layouts.
