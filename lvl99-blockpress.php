@@ -14,7 +14,7 @@ Version: 0.2.2
  *
  * v0.2.2
  *
- * Create rich page layouts using ACF PRO. No need for Gutenberg, Divi Builder or Visual Composer! ... well, maybe...
+ * Create rich page layouts using ACF PRO. No need for Gutenberg, Divi Builder or Visual Composer! ... well, hopefully...
  *
  * - Create re-usable blocks: text, image, carousel, columns, etc.
  * - Customise the blocks in your layout with minimal markup and using your own theme's classes and conventions.
