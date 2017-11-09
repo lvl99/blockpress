@@ -1,6 +1,6 @@
 <?php
 /**
- * ACF BlockPress
+ * BlockPress
  */
 
 namespace LVL99\BlockPress;

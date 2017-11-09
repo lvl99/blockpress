@@ -1,8 +1,8 @@
 <?php
 /**
- * Columns Block
+ * Column Block
  *
- * Represents a number of columns which each hold other types of flexible content
+ * Represents a single column which each hold other types of flexible content
  */
 
 namespace LVL99\BlockPress;

@@ -1,6 +1,6 @@
 <?php
 /**
- * ACF BlockPress - Layout
+ * BlockPress - Layout
  *
  * Represents a field group that can affect a post type's `post_content`
  */

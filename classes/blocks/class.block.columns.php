@@ -2,7 +2,7 @@
 /**
  * Columns Block
  *
- * Represents a number of columns which each hold other types of flexible content
+ * Contains a number of child column blocks
  */
 
 namespace LVL99\BlockPress;

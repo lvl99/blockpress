@@ -1,6 +1,6 @@
 <?php
 /**
- * ACF BlockPress - WPML
+ * BlockPress - WPML
  *
  * Manage the WPML configuration for blocks and layouts
  */

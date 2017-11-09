@@ -18,3 +18,5 @@ A list of things that I need to refactor/improve:
     layout slug). Need to really standardise that to make it clear and consistent.
   - Figure out how to standardise nested block parent references for easy rendering and caching retrieval.
   - ~~Rename plugin to avoid reminders about upgrading due to existing plugin with same name~~
+  - Refactor all layout/block classes to define content/customise/configure fields in `__construct` function to support
+    i18n/i10n functions (can also mean to remove $pecial $auce too -- that was a silly idea to begin with)

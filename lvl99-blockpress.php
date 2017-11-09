@@ -35,7 +35,7 @@ if ( ! function_exists( 'blockpress' ) && ! class_exists( 'LVL99\\BlockPress\\Bu
   define( 'LVL99_BLOCKPRESS', '0.2.1' );
   define( 'LVL99_BLOCKPRESS_PATH', __DIR__ );
 
-  // ACF BlockPress dependencies
+  // Dependencies
   require_once( LVL99_BLOCKPRESS_PATH . '/inc/general.php' );
   require_once( LVL99_BLOCKPRESS_PATH . '/inc/acf-api.php' );
   require_once( LVL99_BLOCKPRESS_PATH . '/inc/field-presets.php' );
@@ -128,22 +128,22 @@ if ( ! function_exists( 'blockpress' ) && ! class_exists( 'LVL99\\BlockPress\\Bu
 
   function blockpress()
   {
-    global $lvl99_acf_blockpress;
+    global $lvl99_blockpress;
 
-    if ( ! isset( $lvl99_acf_blockpress ) )
+    if ( ! isset( $lvl99_blockpress ) )
     {
-      $lvl99_acf_blockpress = new LVL99\BlockPress\Builder();
-      $lvl99_acf_blockpress->initialise();
+      $lvl99_blockpress = new LVL99\BlockPress\Builder();
+      $lvl99_blockpress->initialise();
     }
 
-    return $lvl99_acf_blockpress;
+    return $lvl99_blockpress;
   }
 
   // Let's make page layout magic!
   add_action( 'LVL99\BlockPress\Builder\load_blocks', 'blockpress_load_basic_blocks', 10, 1 );
   add_action( 'LVL99\BlockPress\Builder\load_blocks', 'blockpress_load_special_blocks', 20, 1 );
   add_action( 'LVL99\BlockPress\Builder\load_layouts', 'blockpress_load_layouts', 10, 1 );
-  add_action( 'acf/init', 'lvl99_acf_blockpress' );
+  add_action( 'acf/init', 'blockpress' );
 
   /**
    * Admin
@@ -154,17 +154,17 @@ if ( ! function_exists( 'blockpress' ) && ! class_exists( 'LVL99\\BlockPress\\Bu
 
     function admin_blockpress ()
     {
-      global $admin_lvl99_acf_blockpress;
+      global $admin_lvl99_blockpress;
 
       if ( is_admin() && current_user_can( 'manage_options' ) )
       {
-        if ( ! isset( $admin_lvl99_acf_blockpress ) )
+        if ( ! isset( $admin_lvl99_blockpress ) )
         {
-          $admin_lvl99_acf_blockpress = new LVL99\BlockPress\Admin( blockpress() );
-          $admin_lvl99_acf_blockpress->initialise();
+          $admin_lvl99_blockpress = new LVL99\BlockPress\Admin( blockpress() );
+          $admin_lvl99_blockpress->initialise();
         }
 
-        return $admin_lvl99_acf_blockpress;
+        return $admin_lvl99_blockpress;
       }
     }
 

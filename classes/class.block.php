@@ -1,6 +1,6 @@
 <?php
 /**
- * ACF BlockPress - Block
+ * BlockPress - Block
  *
  * Represents a single layout item within a "Flexible Content" field
  */

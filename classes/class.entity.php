@@ -1,6 +1,6 @@
 <?php
 /**
- * ACF BlockPress - Entity
+ * BlockPress - Entity
  *
  * Represents a generic entity in BlockPress
  */

@@ -1,6 +1,6 @@
 <?php
 /**
- * ACF BlockPress - Admin
+ * BlockPress - Admin
  *
  * Manage BlockPress via the WordPress admin backend
  */
