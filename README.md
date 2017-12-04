@@ -80,11 +80,11 @@ This is a basic plan for features:
   - [x] Caching (rendered views and retrieving/formatting data)
 
 ### v0.3.0 
-  - [ ] ~~Rename from "ACF Page Layout" to "BlockPress"~~
+  - [x] Rename from "ACF Page Layout" to "BlockPress"
   - [ ] WPML support
   - [ ] Create/research REST JSON API to fuel a frontend editor app
   - [ ] Significant refactors to lots of core features (see [IMPROVEMENTS](IMPROVEMENTS.md))
-  
+
 ### v0.4.0
   - [ ] Create saved templates which are a pre-configured layout with blocks or individual blocks to add to layouts
 

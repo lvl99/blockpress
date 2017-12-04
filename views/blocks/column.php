@@ -1,27 +1,30 @@
 <?php
 /**
- * Column Block
+ * Columns Block
  *
- * Holds other basic blocks
+ * Holds column blocks
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly
 }
 
-$block_classes = $configure['element_class'];
-?>
+// Only render if it has nested blocks
+if ( ! empty( $content['columns'] ) ) :
+  $block_classes = $configure['element_class']; ?>
 
-<div <?php if ( ! empty( $configure['element_id'] ) ) : ?> id="<?php echo $configure['element_id']; ?>" <?php endif; ?> class="layout-block-column <?php echo $block_classes; ?>">
-  <?php foreach ( $content['blocks'] as $block_index => $block ) :
-    $block_view_file = blockpress()->locate_block_view( $block['_builder']['block'], $block['_builder']['layout'] );
-    echo blockpress()->render_view( $block_view_file, [
-      'layout' => $block['_builder']['layout'],
-      'parent' => $_builder['cache_key'] . '_' . $block_index, // $_field_key
-      'parent_cache_key' => $_builder['cache_key'],
-      'index' => $block_index,
-      'block' => $block['_builder']['block'],
-      'data' => $block,
-    ] );
-  endforeach; ?>
-</div>
+  <div <?php if ( ! empty( $configure['element_id'] ) ) : ?> id="<?php echo $configure['element_id']; ?>" <?php endif; ?> class="layout-block-columns <?php echo $block_classes; ?>">
+    <?php foreach ( $content['columns'] as $block_index => $block ) :
+      $block_view_file = blockpress()->locate_block_view( $block['_builder']['block'], $block['_builder']['layout'] );
+      echo blockpress()->render_view( $block_view_file, [
+        'layout' => $block['_builder']['layout'],
+        'parent' => $_builder['cache_key'] . '_' . $block_index, // $_field_key
+        'parent_cache_key' => $_builder['cache_key'],
+        'index' => $block_index,
+        'block' => $block['_builder']['block'],
+        'data' => $block,
+      ] );
+    endforeach; ?>
+  </div>
+
+<?php endif;
