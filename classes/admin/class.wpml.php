@@ -189,4 +189,29 @@ class WPML {
   {
     return $this->has_loaded_config;
   }
+
+  /**
+   * Output the WPML config in the filter
+   *
+   * @param $wpml_config
+   * @return array
+   * @throws \Error
+   */
+  public function filter_wpml_config ( $wpml_config = [] )
+  {
+    var_dump( $wpml_config );
+
+    return $wpml_config;
+
+//    if ( defined( 'ICL_SITEPRESS_VERSION') )
+//    {
+//      // If not already loaded, load and parse the ACF config
+//      if ( ! $this->wpml->has_loaded_config() )
+//      {
+//        $this->wpml->parse_builder( blockpress() );
+//      }
+//
+//      return $this->wpml->get_config( 'wpml' );
+//    }
+  }
 }

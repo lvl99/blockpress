@@ -148,6 +148,12 @@ if ( ! function_exists( 'blockpress' ) && ! class_exists( 'LVL99\\BlockPress\\Bu
    */
   if ( ! function_exists( 'admin_blockpress' ) && ! class_exists( 'LVL99\\BlockPress\\Admin' ) )
   {
+    // Include WPML support if it is defined/installed
+    if ( defined( 'ICL_SITEPRESS_VERSION') )
+    {
+      require_once( LVL99_BLOCKPRESS_PATH . '/classes/admin/class.wpml.php' );
+    }
+
     require_once( LVL99_BLOCKPRESS_PATH . '/classes/admin/class.admin.php' );
 
     function admin_blockpress ()
