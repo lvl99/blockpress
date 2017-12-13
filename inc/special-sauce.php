@@ -21,9 +21,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function apply_special_sauce ( $special_sauce, $context = NULL )
 {
-  if ( array_key_exists( 'func', $special_sauce ) && function_exists( $special_sauce['func'] ) )
+  if ( isset( $special_sauce['func'] ) /* @perf array_key_exists( 'func', $special_sauce ) */ && function_exists( $special_sauce['func'] ) )
   {
-    if ( array_key_exists( 'args', $special_sauce ) )
+    if ( isset( $special_sauce['args'] ) /* @perf array_key_exists( 'args', $special_sauce ) */ )
     {
       return call_user_func_array( $special_sauce['func'], $special_sauce['args'] );
     } else {
@@ -48,7 +48,7 @@ function filter_blocks ( $blocks, $filters )
   {
     $block_instance = $block_data;
 
-    if ( array_key_exists( 'instance', $block_data ) )
+    if ( isset( $block_data['instance'] ) /* @perf array_key_exists( 'instance', $block_data ) */ )
     {
       $block_instance = $block_data['instance'];
     }

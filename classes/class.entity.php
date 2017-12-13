@@ -261,7 +261,7 @@ class Entity {
   {
     $blocks = $this->get_blocks();
 
-    if ( array_key_exists( $block_name, $blocks ) )
+    if ( isset( $blocks[$block_name] ) /* @perf array_key_exists( $block_name, $blocks ) */ )
     {
       return $blocks[ $block_name ];
     }
@@ -356,7 +356,7 @@ class Entity {
   {
     $layouts = $this->get_layouts();
 
-    if ( array_key_exists( $layout_name, $layouts ) )
+    if ( isset( $layouts[$layout_name] ) /* @perf array_key_exists( $layout_name, $layouts ) */ )
     {
       return $layouts[ $layout_name ];
     }
@@ -410,7 +410,7 @@ class Entity {
           $_fields = $this->get_prop( $_field_type );
           foreach ( $_fields as $_field_key => $_field )
           {
-            if ( is_array( $_field ) && array_key_exists( '$$', $_field ) )
+            if ( is_array( $_field ) && isset( $_field['$$'] ) /* @perf array_key_exists( '$$', $_field ) */ )
             {
               $this->$_field_type[ $_field_key ] = apply_special_sauce( $_field['$$'], $this );
             }
@@ -504,7 +504,7 @@ class Entity {
     {
       foreach ( $compatible_entities as $entity_type )
       {
-        if ( array_key_exists( $entity_type, $rules ) )
+        if ( isset( $rules[$entity_type] ) /* @perf array_key_exists( $entity_type, $rules ) */ )
         {
           // Only return true if it matches the rule
           // @TODO apply some special sauce here for more dynamic rule matching (e.g. __not, __exclude, __if, etc.)

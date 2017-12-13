@@ -587,7 +587,7 @@ class Builder extends Entity {
    */
   public function get_layout_instance ( $layout_name )
   {
-    if ( array_key_exists( $layout_name, $this->loaded_layouts ) )
+    if ( isset( $this->loaded_layouts[$layout_name] ) /* @perf array_key_exists( $layout_name, $this->loaded_layouts ) */ )
     {
       if ( array_key_exists( 'instance', $this->loaded_layouts[ $layout_name ] ) )
       {
@@ -614,7 +614,7 @@ class Builder extends Entity {
       throw new \Exception( 'Invalid block name given' );
     }
 
-    if ( array_key_exists( $block_name, $this->loaded_blocks ) )
+    if ( isset( $this->loaded_blocks[$block_name] ) /* @perf array_key_exists( $block_name, $this->loaded_blocks ) */ )
     {
       if ( array_key_exists( 'instance', $this->loaded_blocks[ $block_name ] ) )
       {
@@ -671,7 +671,7 @@ class Builder extends Entity {
    */
   public function get_setting ( $setting_name, $default_value = NULL )
   {
-    if ( array_key_exists( $setting_name, $this->settings ) )
+    if ( isset( $this->settings[$setting_name] ) /* @perf array_key_exists( $setting_name, $this->settings ) */ )
     {
       return $this->settings[ $setting_name ];
     }
@@ -720,7 +720,7 @@ class Builder extends Entity {
     $view_slug = $layout_name;
 
     // Check if location is already cached
-    if ( array_key_exists( $view_slug, $this->_views ) )
+    if ( isset( $this->_views[$view_slug] ) /* @perf array_key_exists( $view_slug, $this->_views ) */ )
     {
       return $this->_views[ $view_slug ];
     }
@@ -768,7 +768,7 @@ class Builder extends Entity {
     $view_slug = ( ! empty( $layout_name ) ? $layout_name . '_' . $block_name : $block_name );
 
     // Check if location is already cached
-    if ( array_key_exists( $view_slug, $this->_views ) )
+    if ( isset( $this->_views[$view_slug] ) /* @perf array_key_exists( $view_slug, $this->_views ) */ )
     {
       return $this->_views[ $view_slug ];
     }
@@ -846,7 +846,7 @@ class Builder extends Entity {
       }
 
       // Only map fields that have a key
-      if ( array_key_exists( 'key', $_field ) )
+      if ( isset( $_field['key'] ) /* @perf array_key_exists( 'key', $_field ) */ )
       {
         $field_options = array_merge( $options, [
           'field_group' => $current_field_group,
@@ -870,7 +870,7 @@ class Builder extends Entity {
     ];
 
     // Ensure parent is loaded into mapped field data
-    if ( array_key_exists( 'parent', $_options ) )
+    if ( isset( $_options['parent'] ) /* @perf array_key_exists( 'parent', $_options ) */ )
     {
       $map_block['parent'] = $_options['parent'];
     }
@@ -892,7 +892,7 @@ class Builder extends Entity {
   protected function map_block_data_acf_field ( $block_instance, $acf_field, $options = [] )
   {
     // Only map fields with keys
-    if ( array_key_exists( 'key', $acf_field ) )
+    if ( isset( $acf_field['key'] ) /* @perf array_key_exists( 'key', $acf_field ) */ )
     {
       $map_field = [
         'is_field' => TRUE,
@@ -919,7 +919,7 @@ class Builder extends Entity {
       }
 
       // Ensure field_group is loaded into mapped field data
-      if ( array_key_exists( 'field_group', $options ) )
+      if ( isset( $options['field_group'] ) /* @perf array_key_exists( 'field_group', $options ) */ )
       {
         $map_field['field_group'] = $options['field_group'];
       }
@@ -929,19 +929,19 @@ class Builder extends Entity {
       }
 
       // Add the type
-      if ( array_key_exists( 'type', $acf_field ) )
+      if ( isset( $acf_field['type'] ) /* @perf array_key_exists( 'type', $acf_field ) */ )
       {
         $map_field['type'] = $acf_field['type'];
       }
 
       // Add the layout slug
-      if ( array_key_exists( 'layout_slug', $options ) )
+      if ( isset( $options['layout_slug'] ) /* @perf array_key_exists( 'layout_slug', $options ) */ )
       {
         $map_field['layout_slug'] = $options['layout_slug'];
       }
 
       // Has layouts defined within
-      if ( array_key_exists( 'layouts', $acf_field ) )
+      if ( isset( $acf_field['layouts'] ) /* @perf array_key_exists( 'layouts', $acf_field ) */ )
       {
         $map_field['layouts'] = [];
         $layout_options = array_merge( $options, [
@@ -954,7 +954,7 @@ class Builder extends Entity {
         }
       }
       // Has sub fields defined within
-      else if ( array_key_exists( 'sub_fields', $acf_field ) )
+      else if ( isset( $acf_field['sub_fields'] ) /* @perf array_key_exists( 'sub_fields', $acf_field ) */ )
       {
         $map_field['sub_fields'] = [];
         $sub_field_options = [
@@ -964,7 +964,7 @@ class Builder extends Entity {
 
         // Let's add a type if none set but has sub-fields. We can assume (rightfully?) that this is then a flexible
         // content layout
-        if ( ! array_key_exists( 'type', $acf_field ) )
+        if ( ! isset( $acf_field['type'] ) /* @perf array_key_exists( 'type', $acf_field ) */ )
         {
           $map_field['type'] = 'flexible_content_layout';
         }
@@ -972,7 +972,7 @@ class Builder extends Entity {
         foreach( $acf_field['sub_fields'] as $index => $acf_sub_field )
         {
           // Only map sub fields if they have a type and a key
-          if ( array_key_exists( 'type', $acf_sub_field ) && array_key_exists( 'key', $acf_sub_field ) )
+          if ( isset( $acf_sub_field['type'] ) /* @perf array_key_exists( 'type', $acf_sub_field ) */ && isset( $acf_sub_field['key'] ) /* @perf array_key_exists( 'key', $acf_sub_field ) */ )
           {
             $map_field['sub_fields'][ $acf_sub_field['key'] ] = $this->map_block_data_acf_field( $map_field['block'], $acf_sub_field, $sub_field_options );
           }
@@ -995,7 +995,7 @@ class Builder extends Entity {
    */
   public function check_is_mapped( $key )
   {
-    return array_key_exists( $key, $this->_flatmap );
+    return isset( $this->_flatmap[ $key ] ) /* @perf array_key_exists( $key, $this->_flatmap ) */;
   }
 
   /**
@@ -1052,7 +1052,7 @@ class Builder extends Entity {
     $post_cache_key = $post->post_type . '_' . $post->ID;
 
     // Check if it is in the cache and return it if so
-    if ( array_key_exists( $post_cache_key, $this->_render_data ) )
+    if ( isset( $this->_render_data[$post_cache_key] ) /* @perf array_key_exists( $post_cache_key, $this->_render_data ) */ )
     {
       // Extra key was specified, so get the specific entry for it
       if ( ! empty( $key ) && array_key_exists( $key, $this->_render_data[ $post_cache_key ] ) )
@@ -1148,7 +1148,7 @@ class Builder extends Entity {
     ] );
 
     // Test if its a registered Builder block
-    $is_block = ! empty( $acf_layout_row_data ) && array_key_exists( 'acf_fc_layout', $acf_layout_row_data ) && array_key_exists( $acf_layout_row_data['acf_fc_layout'], $this->get_blocks() );
+    $is_block = ! empty( $acf_layout_row_data ) && isset( $acf_layout_row_data['acf_fc_layout'] ) /* @perf array_key_exists( 'acf_fc_layout', $acf_layout_row_data ) */ && isset( $this->get_blocks()[$acf_layout_row_data['acf_fc_layout']] ) /* @perf array_key_exists( $acf_layout_row_data['acf_fc_layout'], $this->get_blocks() ) */;
 
     // Process block layout
     if ( $is_block )
@@ -1166,10 +1166,10 @@ class Builder extends Entity {
           $data['_field_key'] = $acf_field_key;
 
           // Ensure field is organised into the block's field groups
-          if ( array_key_exists( 'field_group', $field_data ) && ! empty( $field_data['field_group'] ) )
+          if ( isset( $field_data['field_group'] ) /* @perf array_key_exists( 'field_group', $field_data ) */ && ! empty( $field_data['field_group'] ) )
           {
             // Create the field group for the field to be organised into
-            if ( ! array_key_exists( $field_data['field_group'], $data ) )
+            if ( ! isset( $data[$field_data['field_group']] ) /* @perf array_key_exists( $field_data['field_group'], $data ) */ )
             {
               $data[ $field_data['field_group'] ] = [];
             }
@@ -1222,7 +1222,7 @@ class Builder extends Entity {
     ] );
 
     // Not a registered Builder block/field, so carry on...
-    if ( ! array_key_exists( $acf_field_key, $this->_flatmap ) )
+    if ( ! isset( $this->_flatmap[$acf_field_key] ) /* @perf array_key_exists( $acf_field_key, $this->_flatmap ) */ )
     {
       return $return_output;
     }
@@ -1231,7 +1231,7 @@ class Builder extends Entity {
     $field_data = $this->_flatmap[ $acf_field_key ];
 
     // Check if this is a Builder block first
-    if ( is_array( $acf_field_value ) && array_key_exists( 'acf_fc_layout', $acf_field_value ) && array_key_exists( $acf_field_value['acf_fc_layout'], $this->loaded_blocks() ) )
+    if ( is_array( $acf_field_value ) && isset( $acf_field_value['acf_fc_layout'] ) /* @perf array_key_exists( 'acf_fc_layout', $acf_field_value ) */ && isset( $this->loaded_blocks()[$acf_field_value['acf_fc_layout']] ) /* @perf array_key_exists( $acf_field_value['acf_fc_layout'], $this->loaded_blocks() ) */ )
     {
       $mode = 'block';
       $output = $this->parse_block_acf_layout_row_data( $acf_field_value, [
@@ -1310,7 +1310,7 @@ class Builder extends Entity {
 
         }
         // Field has sub-fields
-        else if ( $field_data['type'] === 'flexible_content_layout' || array_key_exists( 'sub_fields', $field_data ) )
+        else if ( $field_data['type'] === 'flexible_content_layout' || isset( $field_data['sub_fields'] ) /* @perf array_key_exists( 'sub_fields', $field_data ) */ )
         {
           $mode = 'flexible_content_layout';
           $nested_index = 0;
@@ -1329,7 +1329,7 @@ class Builder extends Entity {
       }
 
       // Some fields need some extra work done to have proper typed value, like fields with an array/object return_format
-      if ( $mode === 'field' && array_key_exists( 'post', $_options ) )
+      if ( $mode === 'field' && isset( $_options['post'] ) /* @perf array_key_exists( 'post', $_options ) */ )
       {
         $return_output = check_acf_field_to_format_value( $acf_field_key, $acf_field_value, $field_data['acf'], $_options['post'] );
       }
@@ -1449,7 +1449,7 @@ class Builder extends Entity {
           if ( ! empty( $rendered_block ) )
           {
             // Extra stuff to render before each block
-            if ( array_key_exists( 'before_block', $options ) )
+            if ( isset( $options['before_block'] ) /* @perf array_key_exists( 'before_block', $options ) */ )
             {
               $rendered_layout[] = $options['before_block'];
             }
@@ -1458,7 +1458,7 @@ class Builder extends Entity {
             $rendered_layout[] = $rendered_block;
 
             // Extra stuff to render after each block
-            if ( array_key_exists( 'after_block', $options ) )
+            if ( isset( $options['after_block'] ) /* @perf array_key_exists( 'after_block', $options ) */ )
             {
               $rendered_layout[] = $options['after_block'];
             }
@@ -1468,13 +1468,13 @@ class Builder extends Entity {
     }
 
     // Put something before the rendered layout
-    if ( array_key_exists( 'before_layout', $options ) )
+    if ( isset( $options['before_layout'] ) /* @perf array_key_exists( 'before_layout', $options ) */ )
     {
       array_unshift( $rendered_layout,  $options['after_layout'] );
     }
 
     // Put something after the rendered layout
-    if ( array_key_exists( 'after_layout', $options ) )
+    if ( isset( $options['after_layout'] ) /* @perf array_key_exists( 'after_layout', $options ) */ )
     {
       $rendered_layout[] = $options['after_layout'];
     }
@@ -1483,7 +1483,7 @@ class Builder extends Entity {
     $rendered_layout = join( "\n", $rendered_layout );
 
     // Echo the rendered template
-    if ( array_key_exists( 'output', $options ) && $options['output'] === 'echo' )
+    if ( isset( $options['output'] ) /* @perf array_key_exists( 'output', $options ) */ && $options['output'] === 'echo' )
     {
       echo $rendered_layout;
     }
@@ -1506,21 +1506,21 @@ class Builder extends Entity {
 
     // Get the layout/block name
     $post = get_wp_post( $post );
-    $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
-    $layout_name = ( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
-    $parent = ( array_key_exists( 'parent', $options ) ? $options['parent'] : '' );
-    $index = ( array_key_exists( 'index', $options ) ? $options['index'] : '' );
-    $block_name = ( array_key_exists( 'block', $options ) ? $options['block'] : '' );
+    $key = ( isset( $options['key'] ) /* @perf array_key_exists( 'key', $options ) */ ? $options['key'] : '' );
+    $layout_name = ( isset( $options['layout'] ) /* @perf array_key_exists( 'layout', $options ) */ ? $options['layout'] : $this->get_active_layout( $post ) );
+    $parent = ( isset( $options['parent'] ) /* @perf array_key_exists( 'parent', $options ) */ ? $options['parent'] : '' );
+    $index = ( isset( $options['index'] ) /* @perf array_key_exists( 'index', $options ) */ ? $options['index'] : '' );
+    $block_name = ( isset( $options['block'] ) /* @perf array_key_exists( 'block', $options ) */ ? $options['block'] : '' );
 
     // Get the entry in the flatmap to populate layout/block/parent info if key given
-    if ( ! empty( $key ) && array_key_exists( $key, $this->_flatmap ) )
+    if ( ! empty( $key ) && isset( $this->_flatmap[$key] ) /* @perf array_key_exists( $key, $this->_flatmap ) */ )
     {
       $block_data = $this->_flatmap[ $key ];
       $layout_name = $block_data[ 'layout' ]->get_prop( 'name' );
       $block_name = $block_data[ 'block' ]->get_prop( 'name' );
 
       // Get the block's parent (if nested its key of parent block, or name of layout)
-      if ( array_key_exists( 'parent', $block_data ) )
+      if ( isset( $block_data['parent'] ) /* @perf array_key_exists( 'parent', $block_data ) */ )
       {
         $parent = $block_data[ 'parent' ];
       }
@@ -1559,38 +1559,38 @@ class Builder extends Entity {
     $rendered_view = '';
 
     // Get the post
-    $post = get_wp_post( array_key_exists( 'post', $options ) ? $options['post'] : NULL );
+    $post = get_wp_post( isset( $options['post'] ) /* @perf array_key_exists( 'post', $options ) */ ? $options['post'] : NULL );
 
     // A specific key to the layout/block
-    $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
+    $key = ( isset( $options['key'] ) /* @perf array_key_exists( 'key', $options ) */ ? $options['key'] : '' );
 
     // The name of the layout being rendered
-    if ( array_key_exists( 'layout_name', $options ) )
+    if ( isset( $options['layout_name'] ) /* @perf array_key_exists( 'layout_name', $options ) */ )
     {
       $layout_name = $this->get_layout_name( $options['layout_name'] );
     }
     else
     {
-      $layout_name = $this->get_layout_name( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
+      $layout_name = $this->get_layout_name( isset( $options['layout'] ) /* @perf array_key_exists( 'layout', $options ) */ ? $options['layout'] : $this->get_active_layout( $post ) );
     }
 
     // The key (or name) of the parent layout/block
-    $parent = ( array_key_exists( 'parent', $options ) ? $options['parent'] : $layout_name );
+    $parent = ( isset( $options['parent'] ) /* @perf array_key_exists( 'parent', $options ) */ ? $options['parent'] : $layout_name );
 
     // The block layout index count in the layout row
-    $index = ( array_key_exists( 'index', $options ) ? $options['index'] : '' );
+    $index = ( isset( $options['index'] ) /* @perf array_key_exists( 'index', $options ) */ ? $options['index'] : '' );
 
     // The name of the block being rendered
-    if ( array_key_exists( 'block_name', $options ) )
+    if ( isset( $options['block_name'] ) /* @perf array_key_exists( 'block_name', $options ) */ )
     {
       $block_name = $this->get_block_name( $options['block_name'] );
     }
     else
     {
-      $block_name = $this->get_block_name( array_key_exists( 'block', $options ) ? $options['block'] : '' );
+      $block_name = $this->get_block_name( isset( $options['block'] ) /* @perf array_key_exists( 'block', $options ) */ ? $options['block'] : '' );
     }
 
-    $data = ( array_key_exists( 'data', $options ) ? $options['data'] : [] );
+    $data = ( isset( $options['data'] ) /* @perf array_key_exists( 'data', $options ) */ ? $options['data'] : [] );
 
     // Convert layout_slug to layout_name
     if ( strpos( $layout_name, $this->get_prop( 'name' ) ) >= 0 )
@@ -1604,7 +1604,7 @@ class Builder extends Entity {
     ] );
 
     // Get the entry in the flatmap to populate layout/block info
-    if ( ! empty( $key ) && array_key_exists( $key, $this->_flatmap ) )
+    if ( ! empty( $key ) && isset( $this->_flatmap[$key] ) /* @perf array_key_exists( $key, $this->_flatmap ) */ )
     {
       // Get the layout name being rendered
       $layout_name = $this->_flatmap[ $key ][ 'layout' ]->get_prop( 'name' );
@@ -1651,7 +1651,7 @@ class Builder extends Entity {
     if ( empty( $rendered_view )  )
     {
       // Attach builder information to the render data
-      if ( ! array_key_exists( '_builder', $data ) )
+      if ( ! isset( $data['_builder'] ) /* @perf array_key_exists( '_builder', $data ) */ )
       {
         $data['_builder'] = [];
       }
@@ -1692,7 +1692,7 @@ class Builder extends Entity {
     }
 
     // Echo the rendered template
-    if ( array_key_exists( 'output', $options ) && $options['output'] === 'echo' )
+    if ( isset( $options['output'] ) /* @perf array_key_exists( 'output', $options ) */ && $options['output'] === 'echo' )
     {
       echo $rendered_view;
     }
@@ -1744,39 +1744,39 @@ class Builder extends Entity {
   protected function generate_pre_cache_key ( $options = [] )
   {
     // Get the post
-    $post = get_wp_post( array_key_exists( 'post', $options ) ? $options['post'] : NULL );
+    $post = get_wp_post( isset( $options['post'] ) /* @perf array_key_exists( 'post', $options ) */ ? $options['post'] : NULL );
 
     // A specific key to the layout/block
-    $key = ( array_key_exists( 'key', $options ) ? $options['key'] : '' );
+    $key = ( isset( $options['key'] ) /* @perf array_key_exists( 'key', $options ) */ ? $options['key'] : '' );
 
     // The name of the layout being rendered
-    if ( array_key_exists( 'layout_name', $options ) )
+    if ( isset( $options['layout_name'] ) /* @perf array_key_exists( 'layout_name', $options ) */ )
     {
       $layout_name = $this->get_layout_name( $options['layout_name'] );
     }
     else
     {
-      $layout_name = $this->get_layout_name( array_key_exists( 'layout', $options ) ? $options['layout'] : $this->get_active_layout( $post ) );
+      $layout_name = $this->get_layout_name( isset( $options['layout'] ) /* @perf array_key_exists( 'layout', $options ) */ ? $options['layout'] : $this->get_active_layout( $post ) );
     }
 
     // The key (or name) of the parent layout/block
-    $parent = ( array_key_exists( 'parent', $options ) ? $options['parent'] : $layout_name );
+    $parent = ( isset( $options['parent'] ) /* @perf array_key_exists( 'parent', $options ) */ ? $options['parent'] : $layout_name );
 
     // The block layout index count in the layout row
-    $index = ( array_key_exists( 'index', $options ) ? $options['index'] : '' );
+    $index = ( isset( $options['index'] ) /* @perf array_key_exists( 'index', $options ) */ ? $options['index'] : '' );
 
     // The name of the block being rendered
-    if ( array_key_exists( 'block_name', $options ) )
+    if ( isset( $options['block_name'] ) /* @perf array_key_exists( 'block_name', $options ) */ )
     {
       $block_name = $this->get_block_name( $options['block_name'] );
     }
     else
     {
-      $block_name = $this->get_block_name( array_key_exists( 'block', $options ) ? $options['block'] : '' );
+      $block_name = $this->get_block_name( isset( $options['block'] ) /* @perf array_key_exists( 'block', $options ) */ ? $options['block'] : '' );
     }
 
     // Get the entry in the flatmap to populate layout/block info
-    if ( ! empty( $key ) && array_key_exists( $key, $this->_flatmap ) )
+    if ( ! empty( $key ) && isset( $this->_flatmap[$key] ) /* @perf array_key_exists( $key, $this->_flatmap ) */ )
     {
       $entity_data = $this->_flatmap[ $key ];
 
@@ -1784,13 +1784,13 @@ class Builder extends Entity {
       $layout_name = $this->get_layout_name( $entity_data[ 'layout' ] );
 
       // Get the parent key, if rendering nested block
-      if ( array_key_exists( 'parent', $entity_data ) )
+      if ( isset( $entity_data['parent'] ) /* @perf array_key_exists( 'parent', $entity_data ) */ )
       {
         $parent = $entity_data[ 'parent' ];
       }
 
       // Get the block name being rendered
-      if ( array_key_exists( 'block', $entity_data ) )
+      if ( isset( $entity_data['block'] ) /* @perf array_key_exists( 'block', $entity_data ) */ )
       {
         $block_name = $this->get_block_name( $entity_data[ 'block' ] );
       }
@@ -1847,7 +1847,7 @@ class Builder extends Entity {
   protected function get_cached_view ( $cache_key )
   {
     // @TODO support WP Object cache, or maybe some kind of HTML cache
-    if ( ! empty( $cache_key ) && array_key_exists( $cache_key, $this->_views ) )
+    if ( ! empty( $cache_key ) && isset( $this->_views[$cache_key] ) /* @perf array_key_exists( $cache_key, $this->_views ) */ )
     {
       $output = '<!-- BEGIN LVL99 BlockPress - Cached View: ' . $cache_key . ' -->' . "\n";
       $output .= $this->_views[ $cache_key ] . "\n";

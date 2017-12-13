@@ -157,7 +157,7 @@ class Block extends Entity {
   {
     foreach ( $this->_fields as $field_group_name => $field_group_items )
     {
-      if ( array_key_exists( $field_key, $field_group_items ) )
+      if ( isset( $field_group_items[$field_key] ) /* @perf array_key_exists( $field_key, $field_group_items ) */ )
       {
         return $field_group_name;
       }

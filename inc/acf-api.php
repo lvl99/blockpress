@@ -491,7 +491,7 @@ function generate_acf_field ( $type, $acf_config, $options = [] )
   $_field = array_merge( $_field, $acf_config );
 
   // Ensure sanitised key
-  if ( array_key_exists( 'key', $_field ) )
+  if ( isset( $_field['key'] ) /* @perf array_key_exists( 'key', $_field ) */ )
   {
     // @debug
     $_field_key_before_encode = $_field['key'];
@@ -499,9 +499,9 @@ function generate_acf_field ( $type, $acf_config, $options = [] )
     $_field['key'] = $_field_key_after_encode;
 
     // @debug
-    if ( array_key_exists( $_field['key'], $_acfpb_field_key_index ) )
+    if ( isset( $_acfpb_field_key_index[$_field['key']] ) /* @perf array_key_exists( $_field['key'], $_acfpb_field_key_index ) */ )
     {
-      if ( array_key_exists( 'overwrite_field', $options ) && ! empty( $options['overwrite_field'] ) )
+      if ( isset( $options['overwrite_field'] ) /* @perf array_key_exists( 'overwrite_field', $options ) */ && ! empty( $options['overwrite_field'] ) )
       {
         $_acfpb_field_key_index[ $_field['key'] ] = $_field_key_before_encode;
       }
@@ -517,7 +517,7 @@ function generate_acf_field ( $type, $acf_config, $options = [] )
     }
 
     // Ensure blocks (if required) are loaded and attached to the field's ACF config
-    if ( ! empty( $options ) && array_key_exists( 'blocks', $options ) )
+    if ( ! empty( $options ) && isset( $options['blocks'] ) /* @perf array_key_exists( 'blocks', $options ) */ )
     {
       $_field = load_blocks_into_acf_field( $type, $_field, $options );
     }
